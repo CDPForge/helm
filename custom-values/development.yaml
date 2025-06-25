@@ -1,0 +1,139 @@
+global:
+  environment: development
+
+strimzi:
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "200m"
+
+# Configurazione Cluster Kafka
+kafka:
+  replicas: 1
+  config:
+    offsets.topic.replication.factor: 1
+    transaction.state.log.replication.factor: 1
+    transaction.state.log.min.isr: 1
+    log.retention.hours: 24
+    log.segment.bytes: 1073741824
+    log.retention.check.interval.ms: 300000
+  storage:
+    size: 1Gi
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "100m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+# Configurazione OpenSearch Helm Chart
+opensearch:
+  enabled: true
+  
+  # Configurazione cluster
+  clusterName: "cdp-forge-opensearch"
+  
+  # Configurazione nodo singolo con tutti i ruoli
+  nodeGroup: "master"
+  replicas: 1
+  
+  # Ruoli del nodo (tutti i ruoli in un singolo nodeGroup)
+  roles:
+    - master
+    - ingest
+    - data
+    - remote_cluster_client
+  
+  # Configurazione risorse
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "200m"
+    limits:
+      memory: "2Gi"
+      cpu: "400m"
+  
+  # Configurazione persistenza
+  persistence:
+    enabled: true
+    size: 1Gi
+  
+  # Configurazione sicurezza
+  security:
+    enabled: false  # Disabilitato per sviluppo
+  
+  # Variabili d'ambiente aggiuntive per OpenSearch 3.1.0
+  extraEnvs:
+    - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+      value: "CdpForge@2024!"
+
+# Configurazione OpenSearch Dashboards
+opensearch-dashboards:
+  enabled: true
+  
+  # Configurazione risorse
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "200m"
+  
+  # Configurazione servizio
+  service:
+    type: ClusterIP
+    port: 5601
+  
+  # Configurazione OpenSearch connection
+  opensearchHosts: "http://cdp-forge-opensearch-master:9200"
+  
+  # Configurazione sicurezza
+  security:
+    enabled: false  # Disabilitato per sviluppo
+    adminPassword: "CdpForge@2024!"
+
+mysql:
+  architecture: standalone
+  enabled: true
+  
+  # Configurazione autenticazione
+  auth:
+    rootPassword: "cdp-forge-root-2024"
+    database: "cdpforge"
+    username: "cdp_forge_user"
+    password: "cdp-forge-user-2024"
+  
+  # Configurazione replicazione
+  primary:
+    enabled: true
+    persistence:
+      enabled: true
+      size: 1Gi
+      storageClass: ""
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "100m"
+      limits:
+        memory: "2Gi"
+        cpu: "400m"
+    service:
+      type: ClusterIP
+      port: 3306
+
+  secondary:
+    enabled: false
+    replicaCount: 0
+  
+  metrics:
+    enabled: false
+    serviceMonitor:
+      enabled: false
+  
+  backup:
+    enabled: false 

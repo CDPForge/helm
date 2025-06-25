@@ -1,0 +1,213 @@
+# CDP Forge Helm Chart Values
+# Configurazione per Kafka con Strimzi e OpenSearch
+
+global:
+  environment: production
+  domain: cdp-forge.local
+  # Namespace per tutti i componenti (opzionale)
+  # namespaceOverride: "cdp-forge-prod"
+
+# Configurazione Strimzi Kafka Operator
+strimzi:
+  enabled: true
+  # Namespace dove Strimzi monitora i cluster
+  watchNamespaces: ["default"]  # Cambia con il tuo namespace
+  # Oppure per monitorare tutti i namespace:
+  # watchNamespaces: ["*"]
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "200m"
+
+# Configurazione Cluster Kafka
+kafka:
+  enabled: true
+  name: cdp-forge-kafka
+  replicas: 3
+  version: 3.9.0
+  image: strimzi/kafka:3.9.0-kafka-3.9.0
+  listeners:
+    - name: plain
+      port: 9092
+      type: internal
+      tls: false
+    - name: tls
+      port: 9093
+      type: internal
+      tls: true
+  config:
+    auto.create.topics.enable: "true"
+    offsets.topic.replication.factor: 3
+    transaction.state.log.replication.factor: 3
+    transaction.state.log.min.isr: 2
+    log.retention.hours: 168
+    log.segment.bytes: 1073741824
+    log.retention.check.interval.ms: 300000
+  storage:
+    type: persistent-claim
+    size: 10Gi
+    deleteClaim: false
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+
+# Configurazione OpenSearch Helm Chart
+opensearch:
+  enabled: true
+  
+  # Configurazione cluster
+  clusterName: "cdp-forge-opensearch"
+  
+  # Configurazione nodo singolo con tutti i ruoli
+  nodeGroup: "master"
+  replicas: 3
+  
+  # Ruoli del nodo (tutti i ruoli in un singolo nodeGroup)
+  roles:
+    - master
+    - ingest
+    - data
+    - remote_cluster_client
+  
+  # Configurazione risorse
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "500m"
+    limits:
+      memory: "4Gi"
+      cpu: "1000m"
+  
+  # Configurazione persistenza
+  persistence:
+    enabled: true
+    size: 20Gi
+  
+  # Configurazione sicurezza
+  security:
+    enabled: true
+    tls:
+      http:
+        enabled: true
+      transport:
+        enabled: true
+  
+  # Variabili d'ambiente aggiuntive per OpenSearch 3.1.0
+  extraEnvs:
+    - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+      value: "CdpForge@2024!"
+
+# Configurazione OpenSearch Dashboards
+opensearch-dashboards:
+  enabled: true
+  
+  # Configurazione risorse
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  
+  # Configurazione servizio
+  service:
+    type: ClusterIP
+    port: 5601
+  
+  # Configurazione OpenSearch connection
+  opensearchHosts: "http://cdp-forge-opensearch-master:9200"
+  
+  # Configurazione sicurezza
+  security:
+    enabled: true
+    adminPassword: "CdpForge@2024!"
+    tls:
+      enabled: true
+
+# Configurazione MySQL Master-Replica con Automatic Failover
+mysql:
+  enabled: true
+  
+  # Configurazione autenticazione
+  auth:
+    rootPassword: "cdp-forge-root-2024"
+    database: "cdpforge"
+    username: "cdp_forge_user"
+    password: "cdp-forge-user-2024"
+    replicationPassword: "CdpForge@2024!"
+  
+  # Configurazione replicazione
+  primary:
+    enabled: true
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: ""
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+    service:
+      type: ClusterIP
+      port: 3306
+  
+  # Configurazione replica secondaria
+  secondary:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      size: 10Gi
+      storageClass: ""
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "500m"
+      limits:
+        memory: "2Gi"
+        cpu: "1000m"
+    service:
+      type: ClusterIP
+      port: 3306
+  
+  # Configurazione automatic failover
+  architecture: replication
+  replication:
+    mode: asynchronous
+    syncBinlog: 1
+    innodbFlushLogAtTrxCommit: 1
+  
+  # Configurazione monitoring e health checks
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: false  # Disabilitato per default - richiede Prometheus Operator
+  
+  # Configurazione backup
+  backup:
+    enabled: true
+    cronjob:
+      schedule: "0 2 * * *"  # Backup giornaliero alle 2:00
+      retention: 7  # Mantieni backup per 7 giorni
+  
+  # Configurazione sicurezza
+  securityContext:
+    enabled: true
+    fsGroup: 1001
+    runAsUser: 1001
+  
+  # Configurazione service
+  service:
+    type: ClusterIP
+    port: 3306
+    targetPort: 3306 

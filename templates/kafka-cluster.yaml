@@ -1,0 +1,24 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: {{ .Values.kafka.name | default "my-cluster" }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    strimzi.io/kraft: "enabled"
+    strimzi.io/node-pools: "enabled"
+spec:
+  kafka:
+    version: {{ .Values.kafka.version | default "3.9.0" }}
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+    
+  entityOperator:
+    topicOperator: {}
+    userOperator: {} 

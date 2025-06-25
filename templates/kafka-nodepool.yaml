@@ -1,0 +1,27 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: dual-role
+  namespace: {{ .Release.Namespace }}
+  labels:
+    strimzi.io/cluster: {{ .Values.kafka.name | default "my-cluster" }}
+spec:
+  replicas: {{ .Values.kafka.replicas | default 3 }}
+  roles:
+    - broker
+    - controller
+  storage:
+    type: {{ .Values.kafka.storage.type | default "ephemeral" }}
+    {{- if eq (.Values.kafka.storage.type | default "ephemeral") "persistent-claim" }}
+    size: {{ .Values.kafka.storage.size | default "10Gi" }}
+    {{- end }}
+  resources:
+    requests:
+      memory: {{ .Values.kafka.resources.requests.memory | default "1Gi" }}
+      cpu: {{ .Values.kafka.resources.requests.cpu | default "500m" }}
+    limits:
+      memory: {{ .Values.kafka.resources.limits.memory | default "2Gi" }}
+      cpu: {{ .Values.kafka.resources.limits.cpu | default "1000m" }}
+  jvmOptions:
+    -Xms: {{ .Values.kafka.resources.requests.memory | default "1Gi" | replace "Gi" "g" | replace "Mi" "m" }}
+    -Xmx: {{ .Values.kafka.resources.limits.memory | default "2Gi" | replace "Gi" "g" | replace "Mi" "m" }} 
