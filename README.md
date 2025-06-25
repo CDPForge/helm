@@ -1,24 +1,41 @@
 # CDP Forge Helm Chart
 
-Questo pacchetto Helm deploya un cluster Kafka completo, un cluster OpenSearch e un cluster MySQL master-replica per CDP Forge utilizzando Strimzi Kafka Operator, OpenSearch Helm Chart e MySQL Bitnami Chart.
+This Helm package deploys a complete Kafka cluster, OpenSearch cluster, and MySQL master-replica cluster for CDP Forge using Strimzi Kafka Operator, official OpenSearch Helm Chart, and MySQL Bitnami Chart.
 
-## Componenti
+## Components
 
-- **Strimzi Kafka Operator**: Operatore per gestire cluster Kafka su Kubernetes
-- **Kafka Cluster**: Cluster Kafka con 3 repliche (High Availability)
-- **OpenSearch Cluster**: Cluster OpenSearch con 6 nodi (3 master + 3 data)
-- **OpenSearch Dashboards**: Interfaccia web per gestire OpenSearch
-- **MySQL Cluster**: Cluster MySQL master-replica con automatic failover
+- **Strimzi Kafka Operator**: Operator for managing Kafka clusters on Kubernetes
+- **Kafka Cluster**: Kafka cluster with 3 replicas (High Availability)
+- **OpenSearch Cluster**: OpenSearch cluster with 3 nodes (all roles: master, data, ingest)
+- **OpenSearch Dashboards**: Web interface for managing OpenSearch
+- **MySQL Cluster**: MySQL master-replica cluster with automatic failover
 
-## Prerequisiti
+## Prerequisites
 
 - Kubernetes 1.19+
 - Helm 3.0+
-- Storage class per persistent volumes
+- Storage class for persistent volumes
 
-## Installazione
+## Installation
 
-1. Aggiungi i repository necessari:
+### Quick Installation
+
+Use the provided installation script:
+
+```bash
+# Installation with default values
+./install.sh
+
+# Installation with custom values file
+./install.sh -f custom-values.yaml
+
+# Installation with custom namespace
+./install.sh -n my-namespace -f custom-values.yaml
+```
+
+### Manual Installation
+
+1. Add the required repositories:
 ```bash
 helm repo add strimzi https://strimzi.io/charts/
 helm repo add opensearch https://opensearch-project.github.io/helm-charts/
@@ -26,114 +43,117 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 ```
 
-2. Installa il chart:
+2. Install the chart:
 ```bash
-helm install cdp-forge . -n cdpforge
+helm install cdp-forge . -n cdpforge -f values.yaml
 ```
 
-## Configurazione
+## Configuration
 
-### Valori principali
+### Main Parameters
 
-| Parametro | Descrizione | Default |
+| Parameter | Description | Default |
 |-----------|-------------|---------|
-| `strimzi.enabled` | Abilita Strimzi Kafka Operator | `true` |
-| `kafka.enabled` | Abilita il cluster Kafka | `true` |
-| `kafka.replicas` | Numero di repliche Kafka | `3` |
-| `kafka.storage.size` | Dimensione storage per Kafka | `10Gi` |
-| `zookeeper.replicas` | Numero di repliche Zookeeper | `3` |
-| `zookeeper.storage.size` | Dimensione storage per Zookeeper | `5Gi` |
-| `opensearch.enabled` | Abilita il cluster OpenSearch | `true` |
-| `opensearch.master.replicas` | Numero di repliche Master | `3` |
-| `opensearch.data.replicas` | Numero di repliche Data | `3` |
-| `opensearch.persistence.size` | Dimensione storage per OpenSearch | `20Gi` |
-| `mysql.enabled` | Abilita il cluster MySQL | `true` |
-| `mysql.secondary.replicaCount` | Numero di repliche MySQL | `2` |
-| `mysql.persistence.size` | Dimensione storage per MySQL | `10Gi` |
+| `strimzi.enabled` | Enable Strimzi Kafka Operator | `true` |
+| `kafka.enabled` | Enable Kafka cluster | `true` |
+| `kafka.replicas` | Number of Kafka replicas | `3` |
+| `kafka.storage.size` | Storage size for Kafka | `10Gi` |
+| `opensearch.enabled` | Enable OpenSearch cluster | `true` |
+| `opensearch.replicas` | Number of OpenSearch replicas | `3` |
+| `opensearch.persistence.size` | Storage size for OpenSearch | `20Gi` |
+| `opensearch-dashboards.enabled` | Enable OpenSearch Dashboards | `true` |
+| `mysql.enabled` | Enable MySQL cluster | `true` |
+| `mysql.secondary.replicaCount` | Number of MySQL replicas | `2` |
+| `mysql.persistence.size` | Storage size for MySQL | `10Gi` |
 
-### Listeners Kafka
+### Kafka Listeners
 
-Il cluster Kafka espone tre listener:
-- **plain**: Porta 9092, senza TLS, accesso interno
-- **tls**: Porta 9093, con TLS, accesso interno
-- **external**: Porta 9094, senza TLS, accesso esterno via NodePort
+The Kafka cluster exposes two listeners:
+- **plain**: Port 9092, no TLS, internal access
+- **tls**: Port 9093, with TLS, internal access
 
 ### High Availability
 
-Il cluster Kafka è configurato per High Availability:
-- **3 repliche Kafka**: Protezione da fallimenti di singoli broker
-- **Replication factor**: 3 per tutti i topic di sistema
-- **Min ISR**: 2 per garantire disponibilità
+The Kafka cluster is configured for High Availability:
+- **3 Kafka replicas**: Protection from single broker failures
+- **Replication factor**: 3 for all system topics
+- **Min ISR**: 2 to ensure availability
 
 ### OpenSearch Security
 
-L'operatore OpenSearch gestisce automaticamente:
-- **Generazione password casuali** per tutti gli utenti
-- **Creazione Kubernetes Secrets** con le credenziali
-- **Configurazione TLS** per HTTP e transport
-- **Setup autenticazione e autorizzazione**
-- **Deploy OpenSearch Dashboards**
+The official OpenSearch chart manages:
+- **Configured admin password**: `CdpForge@2024!` (meets OpenSearch 3.1.0+ security requirements)
+- **TLS configuration** for HTTP and transport
+- **Authentication and authorization setup**
+- **Integrated OpenSearch Dashboards**
 
-#### Password OpenSearch
+#### OpenSearch Passwords
 
-Le password vengono generate automaticamente dall'operatore e salvate in Secret. Per recuperarle:
+The admin password is configured in the `values.yaml` file:
+- **Username**: `admin`
+- **Password**: `CdpForge@2024!`
+
+To retrieve the password from an existing Secret:
 
 ```bash
-# Lista tutti i Secret di OpenSearch
-kubectl get secrets | grep opensearch
-
-# Recupera password admin (il nome del Secret può variare)
-kubectl get secret <opensearch-secret-name> -o jsonpath='{.data.admin}' | base64 -d
-
-# Oppure usa il comando fornito dall'operatore
-kubectl get secret <opensearch-secret-name> -o jsonpath='{.data.admin}' | base64 -d
+# Retrieve admin password from Secret
+kubectl get secret cdp-forge-opensearch-master -o jsonpath='{.data.admin-password}' | base64 -d
 ```
 
-### MySQL Master-Replica con Automatic Failover
+### MySQL Master-Replica with Automatic Failover
 
-Il cluster MySQL è configurato con:
-- **1 Master Node**: Gestisce scritture e transazioni
-- **2 Replica Nodes**: Gestiscono letture e backup
-- **Automatic Failover**: Promozione automatica di una replica a master
-- **Backup automatici**: Backup giornalieri con retention di 7 giorni
-- **Monitoring**: Metriche Prometheus integrate
+The MySQL cluster is configured with:
+- **1 Master Node**: Handles writes and transactions
+- **2 Replica Nodes**: Handle reads and backups
+- **Automatic Failover**: Automatic promotion of a replica to master
+- **Automatic backups**: Daily backups with 7-day retention
+- **Monitoring**: Integrated Prometheus metrics (ServiceMonitor disabled by default)
 
-#### Password MySQL
+#### MySQL Passwords
 
-Le password vengono generate automaticamente e salvate in Secret:
+Passwords are configured in the `values.yaml` file:
+- **Root Password**: `cdp-forge-root-2024`
+- **User Password**: `cdp-forge-user-2024`
+- **Replication Password**: `CdpForge@2024!`
+
+To retrieve passwords from existing Secrets:
 
 ```bash
-# Recupera password root
+# Retrieve root password
 kubectl get secret cdp-forge-mysql -o jsonpath='{.data.mysql-root-password}' | base64 -d
 
-# Recupera password utente
+# Retrieve user password
 kubectl get secret cdp-forge-mysql -o jsonpath='{.data.mysql-password}' | base64 -d
+
+# Retrieve replication password
+kubectl get secret cdp-forge-mysql -o jsonpath='{.data.mysql-replication-password}' | base64 -d
 ```
 
-#### Connessione MySQL
+#### MySQL Connection
 
 ```bash
-# Connessione al master (scritture)
+# Connect to master (writes)
 mysql -h cdp-forge-mysql-primary -u root -p
 
-# Connessione alle repliche (letture)
+# Connect to replicas (reads)
 mysql -h cdp-forge-mysql-secondary -u root -p
 
-# Connessione utente applicazione
-mysql -h cdp-forge-mysql-primary -u cdp_forge_user -p cdp_forge
+# Connect application user
+mysql -h cdp-forge-mysql-primary -u cdp_forge_user -p cdpforge
 ```
 
-### Configurazione avanzata
+### Advanced Configuration
 
-Modifica il file `values.yaml` per personalizzare:
-- Risorse CPU e memoria
-- Configurazioni Kafka, OpenSearch e MySQL
+Modify the `values.yaml` file to customize:
+- CPU and memory resources
+- Kafka, OpenSearch, and MySQL configurations
 - Storage class
-- Versioni delle immagini
+- Image versions
+- Passwords and credentials
 
-## Utilizzo
+## Usage
 
-### Connessione al cluster Kafka
+### Connecting to Kafka Cluster
 
 ```bash
 # Bootstrap servers
@@ -141,33 +161,27 @@ cdp-forge-kafka-kafka-bootstrap:9092  # Plain
 cdp-forge-kafka-kafka-bootstrap:9093  # TLS
 ```
 
-### Connessione a OpenSearch
+### Connecting to OpenSearch
 
 ```bash
-# Recupera la password admin dal Secret generato dall'operatore
-ADMIN_PASSWORD=$(kubectl get secret <opensearch-secret-name> -o jsonpath='{.data.admin}' | base64 -d)
-
 # OpenSearch REST API
-curl -k -u admin:$ADMIN_PASSWORD https://cdp-forge-opensearch:9200
+curl -k -u admin:CdpForge@2024! https://cdp-forge-opensearch-master:9200
 
 # OpenSearch Dashboards
-# Accessibile tramite il service creato dall'operatore
+# Accessible via: cdp-forge-opensearch-dashboards:5601
 ```
 
-### Connessione a MySQL
+### Connecting to MySQL
 
 ```bash
-# Recupera password
-MYSQL_PASSWORD=$(kubectl get secret cdp-forge-mysql -o jsonpath='{.data.mysql-password}' | base64 -d)
+# Connect to master
+mysql -h cdp-forge-mysql-primary -u cdp_forge_user -pcdp-forge-user-2024 cdpforge
 
-# Connessione al master
-mysql -h cdp-forge-mysql-primary -u cdp_forge_user -p$MYSQL_PASSWORD cdp_forge
-
-# Connessione alle repliche
-mysql -h cdp-forge-mysql-secondary -u cdp_forge_user -p$MYSQL_PASSWORD cdp_forge
+# Connect to replicas
+mysql -h cdp-forge-mysql-secondary -u cdp_forge_user -pcdp-forge-user-2024 cdpforge
 ```
 
-### Creazione di un topic Kafka
+### Creating a Kafka Topic
 
 ```yaml
 apiVersion: kafka.strimzi.io/v1beta2
@@ -184,14 +198,11 @@ spec:
     segment.bytes: 1073741824
 ```
 
-### Creazione di un indice OpenSearch
+### Creating an OpenSearch Index
 
 ```bash
-# Recupera la password admin
-ADMIN_PASSWORD=$(kubectl get secret <opensearch-secret-name> -o jsonpath='{.data.admin}' | base64 -d)
-
-# Crea un indice
-curl -k -u admin:$ADMIN_PASSWORD -X PUT "https://cdp-forge-opensearch:9200/my-index" \
+# Create an index
+curl -k -u admin:CdpForge@2024! -X PUT "https://cdp-forge-opensearch-master:9200/my-index" \
   -H "Content-Type: application/json" \
   -d '{
     "settings": {
@@ -200,8 +211,8 @@ curl -k -u admin:$ADMIN_PASSWORD -X PUT "https://cdp-forge-opensearch:9200/my-in
     }
   }'
 
-# Inserisci un documento
-curl -k -u admin:$ADMIN_PASSWORD -X POST "https://cdp-forge-opensearch:9200/my-index/_doc" \
+# Insert a document
+curl -k -u admin:CdpForge@2024! -X POST "https://cdp-forge-opensearch-master:9200/my-index/_doc" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Test Document",
@@ -210,7 +221,7 @@ curl -k -u admin:$ADMIN_PASSWORD -X POST "https://cdp-forge-opensearch:9200/my-i
   }'
 ```
 
-### Creazione di un utente Kafka
+### Creating a Kafka User
 
 ```yaml
 apiVersion: kafka.strimzi.io/v1beta2
@@ -233,18 +244,18 @@ spec:
         host: "*"
 ```
 
-## Monitoraggio
+## Monitoring
 
-I cluster includono:
-- Metriche Prometheus per Kafka, OpenSearch e MySQL
-- Health checks e probe di readiness/liveness
-- Logging strutturato
-- OpenSearch Dashboards per visualizzazione
-- MySQL monitoring con ServiceMonitor
+The clusters include:
+- Prometheus metrics for Kafka, OpenSearch, and MySQL
+- Health checks and readiness/liveness probes
+- Structured logging
+- OpenSearch Dashboards for visualization
+- MySQL monitoring with ServiceMonitor (disabled by default)
 
 ## Troubleshooting
 
-### Verifica dello stato del cluster Kafka
+### Checking Kafka Cluster Status
 
 ```bash
 kubectl get kafka
@@ -252,27 +263,26 @@ kubectl get kafka -o yaml
 kubectl get pods -l strimzi.io/cluster=cdp-forge-kafka
 ```
 
-### Verifica dello stato del cluster OpenSearch
+### Checking OpenSearch Cluster Status
 
 ```bash
-kubectl get pods -l app=opensearch
-kubectl logs -l app=opensearch
+kubectl get pods -l app.kubernetes.io/name=opensearch
+kubectl logs -l app.kubernetes.io/name=opensearch
 
-# Verifica connessione (usa password dal Secret dell'operatore)
-ADMIN_PASSWORD=$(kubectl get secret <opensearch-secret-name> -o jsonpath='{.data.admin}' | base64 -d)
-curl -k -u admin:$ADMIN_PASSWORD https://cdp-forge-opensearch:9200/_cluster/health
+# Check connection
+curl -k -u admin:CdpForge@2024! https://cdp-forge-opensearch-master:9200/_cluster/health
 ```
 
-### Verifica dello stato del cluster MySQL
+### Checking MySQL Cluster Status
 
 ```bash
-# Verifica pod MySQL
+# Check MySQL pods
 kubectl get pods -l app.kubernetes.io/name=mysql
 
-# Verifica replicazione
+# Check replication
 kubectl exec -it cdp-forge-mysql-primary-0 -- mysql -u root -p -e "SHOW SLAVE HOSTS;"
 
-# Verifica stato master/replica
+# Check master/replica status
 kubectl exec -it cdp-forge-mysql-primary-0 -- mysql -u root -p -e "SHOW MASTER STATUS;"
 kubectl exec -it cdp-forge-mysql-secondary-0 -- mysql -u root -p -e "SHOW SLAVE STATUS\G"
 ```
@@ -285,17 +295,38 @@ kubectl logs -l strimzi.io/cluster=cdp-forge-kafka
 kubectl logs -l strimzi.io/cluster=cdp-forge-zookeeper
 
 # OpenSearch
-kubectl logs -l app=opensearch
-kubectl logs -l app=opensearch-dashboards
+kubectl logs -l app.kubernetes.io/name=opensearch
+kubectl logs -l app.kubernetes.io/name=opensearch-dashboards
 
 # MySQL
 kubectl logs -l app.kubernetes.io/name=mysql
 ```
 
-## Disinstallazione
+## Uninstallation
+
+### Quick Uninstallation
+
+Use the provided uninstallation script:
 
 ```bash
-helm uninstall cdp-forge
+# Uninstallation with default namespace
+./uninstall.sh
+
+# Uninstallation with custom namespace
+./uninstall.sh -n my-namespace
 ```
 
-**Nota**: I persistent volumes e i Secret con le password non vengono eliminati automaticamente per preservare i dati e le credenziali. 
+### Manual Uninstallation
+
+```bash
+helm uninstall cdp-forge -n cdpforge
+```
+
+**Note**: Persistent volumes and Secrets with passwords are not automatically deleted to preserve data and credentials.
+
+## Security Notes
+
+- **OpenSearch 3.1.0+**: Requires passwords that meet specific security criteria (minimum 8 characters, uppercase, lowercase, digits, and special characters)
+- **MySQL Replication**: Uses separate replication password for security
+- **TLS**: Enabled for OpenSearch HTTP and transport
+- **ServiceMonitor**: Disabled by default for MySQL (requires Prometheus Operator) 
