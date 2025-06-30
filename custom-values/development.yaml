@@ -143,7 +143,7 @@ mysql:
 core-pipeline-manager:  
   # Configurazione immagine
   image:
-    tag: "v0.0.3"
+    tag: "0.0.3"
     pullPolicy: IfNotPresent
   
   # Configurazione risorse
