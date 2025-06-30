@@ -144,6 +144,11 @@ mysql:
     password: "cdp-forge-user-2024"
     replicationPassword: "CdpForge@2024!"
   
+  # Configurazione inizializzazione database
+  init:
+    enabled: true
+    sqlUrl: "https://raw.githubusercontent.com/CDPForge/core-mysql/refs/heads/main/sql/init.sql"
+  
   # Configurazione replicazione
   primary:
     enabled: true

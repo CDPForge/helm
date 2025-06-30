@@ -1,0 +1,46 @@
+{{- if .Values.mysql.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "cdp-forge.fullname" . }}-mysql-init
+  labels:
+    {{- include "cdp-forge.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mysql
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "cdp-forge.labels" . | nindent 8 }}
+        app.kubernetes.io/component: mysql
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: mysql-init
+        image: mysql:8.0
+        command:
+        - /bin/bash
+        - -c
+        - |
+          # Installa curl se non presente
+          apt-get update && apt-get install -y curl
+          
+          echo "Waiting for MySQL to be ready..."
+          until mysql -h {{ .Release.Name }}-mysql-primary -u root -p{{ .Values.mysql.auth.rootPassword }} -e "SELECT 1"; do
+            echo "MySQL not ready yet, waiting..."
+            sleep 5
+          done
+          
+          echo "MySQL is ready, downloading initialization script..."
+          
+          # Scarica il file SQL da rawgit
+          curl -o /tmp/init.sql "{{ .Values.mysql.init.sqlUrl | default 'https://raw.githubusercontent.com/CDPForge/core-mysql/refs/heads/main/sql/init.sql' }}"
+          
+          if [ $? -eq 0 ]; then
+            echo "Script downloaded successfully, running initialization..."
+            mysql -h {{ .Release.Name }}-mysql -u root -p{{ .Values.mysql.auth.rootPassword }} < /tmp/init.sql
+            echo "Database initialization completed!"
+          else
+            echo "Failed to download initialization script!"
+            exit 1
+          fi
+{{- end }} 
