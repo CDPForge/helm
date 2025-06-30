@@ -1,0 +1,13 @@
+{{- if (index .Values "core-pipeline-manager").enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cdp-forge.fullname" . }}-core-pipeline-manager-map
+  labels:
+    {{- include "cdp-forge.labels" . | nindent 4 }}
+    app.kubernetes.io/component: core-pipeline-manager
+data:
+  plugin.yml: |
+    plugin:
+      name: 'core_pipeline_stage'
+{{- end }} 

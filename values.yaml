@@ -210,4 +210,50 @@ mysql:
   service:
     type: ClusterIP
     port: 3306
-    targetPort: 3306 
+    targetPort: 3306
+
+# Configurazione Core Pipeline Manager
+core-pipeline-manager:
+  enabled: true
+  
+  # Configurazione immagine
+  image:
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  # Configurazione risorse
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  
+  # Configurazione servizio
+  service:
+    type: ClusterIP
+    port: 80
+
+# Configurazione Core Pipeline Stage
+core-pipeline-stage:
+  enabled: true
+  
+  # Configurazione immagine
+  image:
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  
+  # Configurazione risorse
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  
+  # Configurazione servizio
+  service:
+    type: ClusterIP
+    port: 80    

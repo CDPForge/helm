@@ -1,0 +1,93 @@
+{{- if (index .Values "core-pipeline-manager").enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cdp-forge.fullname" . }}-core-pipeline-manager
+  labels:
+    {{- include "cdp-forge.labels" . | nindent 4 }}
+    app.kubernetes.io/component: core-pipeline-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "cdp-forge.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: core-pipeline-manager
+  template:
+    metadata:
+      labels:
+        {{- include "cdp-forge.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: core-pipeline-manager
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      initContainers:
+        {{- if .Values.mysql.enabled }}
+        - name: wait-for-mysql
+          image: busybox:1.35
+          command: ['sh', '-c', 'until nc -z cdp-forge-mysql 3306; do echo waiting for mysql; sleep 2; done;']
+        {{- end }}
+        {{- if .Values.kafka.enabled }}
+        - name: wait-for-kafka
+          image: busybox:1.35
+          command: ['sh', '-c', 'until nc -z cdp-forge-kafka-kafka-bootstrap 9092; do echo waiting for kafka; sleep 2; done;']
+        {{- end }}
+        {{- if .Values.opensearch.enabled }}
+        - name: wait-for-opensearch
+          image: busybox:1.35
+          command: ['sh', '-c', 'until nc -z opensearch-cluster-master 9200; do echo waiting for opensearch; sleep 2; done;']
+        {{- end }}
+
+      containers:
+      - name: core-pipeline-manager
+        image: ghcr.io/cdpforge/core-pipeline-manager:{{ (index .Values "core-pipeline-manager").image.tag | default "latest" }}
+        imagePullPolicy: {{ (index .Values "core-pipeline-manager").image.pullPolicy | default "IfNotPresent" }}
+
+        ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP
+
+        {{- if (index .Values "core-pipeline-manager").resources }}
+        resources:
+          {{- toYaml (index .Values "core-pipeline-manager").resources | nindent 10 }}
+        {{- end }}
+
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        volumeMounts:
+        - name: cluster-config
+          mountPath: /app/dist/config/config.yml
+          subPath: config.yml
+          readOnly: true
+        - name: plugin-config
+          mountPath: /app/dist/config/plugin.yml
+          subPath: plugin.yml
+          readOnly: true
+
+      volumes:
+      - name: cluster-config
+        secret:
+          secretName: {{ include "cdp-forge.fullname" . }}-cluster-config
+      - name: plugin-config
+        configMap:
+          name: {{ include "cdp-forge.fullname" . }}-core-pipeline-manager-map
+{{- end }}

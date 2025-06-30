@@ -1,5 +1,6 @@
 global:
   environment: development
+  domain: cdp-forge-dev.local
 
 strimzi:
   resources:
@@ -136,4 +137,20 @@ mysql:
       enabled: false
   
   backup:
-    enabled: false 
+    enabled: false
+
+# Configurazione Core Pipeline Manager
+core-pipeline-manager:  
+  # Configurazione immagine
+  image:
+    tag: "v0.0.3"
+    pullPolicy: IfNotPresent
+  
+  # Configurazione risorse
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
