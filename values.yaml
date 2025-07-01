@@ -144,10 +144,13 @@ mysql:
     password: "cdp-forge-user-2024"
     replicationPassword: "CdpForge@2024!"
   
-  # Configurazione inizializzazione database
+  # Configurazione inizializzazione database con Flyway
   init:
     enabled: true
-    sqlUrl: "https://raw.githubusercontent.com/CDPForge/core-mysql/refs/heads/main/sql/init.sql"
+    flyway:
+      enabled: true
+      repository: "https://github.com/CDPForge/core-mysql.git"
+      version: "9.22.3"
   
   # Configurazione replicazione
   primary:

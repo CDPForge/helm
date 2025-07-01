@@ -16,31 +16,74 @@ spec:
       restartPolicy: OnFailure
       containers:
       - name: mysql-init
-        image: mysql:8.0
+        image: openjdk:11-jre-slim
+        volumeMounts:
+        - name: flyway-config
+          mountPath: /opt/flyway/conf
+          readOnly: true
         command:
         - /bin/bash
         - -c
         - |
-          # Installa curl se non presente
-          apt-get update && apt-get install -y curl
+          # Installa curl, git, wget e mysql-client
+          apt-get update && apt-get install -y curl git wget unzip default-mysql-client
           
           echo "Waiting for MySQL to be ready..."
-          until mysql -h {{ .Release.Name }}-mysql-primary -u root -p{{ .Values.mysql.auth.rootPassword }} -e "SELECT 1"; do
+          until mysql -h {{ .Release.Name }}-mysql -u root -p{{ .Values.mysql.auth.rootPassword }} -e "SELECT 1"; do
             echo "MySQL not ready yet, waiting..."
             sleep 5
           done
           
-          echo "MySQL is ready, downloading initialization script..."
+          echo "MySQL is ready, setting up Flyway..."
           
-          # Scarica il file SQL da rawgit
-          curl -o /tmp/init.sql "{{ .Values.mysql.init.sqlUrl | default 'https://raw.githubusercontent.com/CDPForge/core-mysql/refs/heads/main/sql/init.sql' }}"
+          # Scarica Flyway
+          wget -qO- https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/9.22.3/flyway-commandline-9.22.3-linux-x64.tar.gz | tar xvz
+          ln -s `pwd`/flyway-9.22.3/flyway /usr/local/bin/flyway
+          
+          # Clona il repository core-mysql
+          echo "Cloning core-mysql repository..."
+          git clone https://github.com/CDPForge/core-mysql.git /tmp/core-mysql
           
           if [ $? -eq 0 ]; then
-            echo "Script downloaded successfully, running initialization..."
-            mysql -h {{ .Release.Name }}-mysql -u root -p{{ .Values.mysql.auth.rootPassword }} < /tmp/init.sql
-            echo "Database initialization completed!"
+            echo "Repository cloned successfully, running Flyway migrations..."
+            
+            # Crea il database se non esiste
+            mysql -h {{ .Release.Name }}-mysql -u root -p{{ .Values.mysql.auth.rootPassword }} -e "CREATE DATABASE IF NOT EXISTS {{ .Values.mysql.auth.database }};"
+            
+                      # Esegui le migrazioni Flyway
+          echo "Checking Flyway configuration..."
+          flyway -configFiles=/opt/flyway/conf/flyway.conf info
+          
+          echo "Listing migration files..."
+          ls -la /tmp/core-mysql/sql/
+          
+          echo "Running Flyway migrations with direct parameters..."
+          flyway -configFiles=/opt/flyway/conf/flyway.conf migrate
+            
+            if [ $? -eq 0 ]; then
+              echo "Flyway migrations completed successfully!"
+              
+              # Crea l'utente applicazione se specificato
+              {{- if and .Values.mysql.auth.username .Values.mysql.auth.password }}
+              echo "Creating application user..."
+              mysql -h {{ .Release.Name }}-mysql -u root -p{{ .Values.mysql.auth.rootPassword }} -e "
+                CREATE USER IF NOT EXISTS '{{ .Values.mysql.auth.username }}'@'%' IDENTIFIED BY '{{ .Values.mysql.auth.password }}';
+                GRANT ALL PRIVILEGES ON {{ .Values.mysql.auth.database }}.* TO '{{ .Values.mysql.auth.username }}'@'%';
+                FLUSH PRIVILEGES;
+              "
+              echo "Application user created successfully!"
+              {{- end }}
+              
+            else
+              echo "Flyway migrations failed!"
+              exit 1
+            fi
           else
-            echo "Failed to download initialization script!"
+            echo "Failed to clone core-mysql repository!"
             exit 1
           fi
+      volumes:
+      - name: flyway-config
+        configMap:
+          name: {{ include "cdp-forge.fullname" . }}-flyway-config
 {{- end }} 

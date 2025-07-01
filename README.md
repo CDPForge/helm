@@ -108,6 +108,7 @@ The MySQL cluster is configured with:
 - **Automatic Failover**: Automatic promotion of a replica to master
 - **Automatic backups**: Daily backups with 7-day retention
 - **Monitoring**: Integrated Prometheus metrics (ServiceMonitor disabled by default)
+- **Database Migrations**: Flyway-based schema versioning using [CDP Forge core-mysql repository](https://github.com/CDPForge/core-mysql.git)
 
 #### MySQL Passwords
 
@@ -150,6 +151,27 @@ Modify the `values.yaml` file to customize:
 - Storage class
 - Image versions
 - Passwords and credentials
+- Flyway migration settings
+
+#### Flyway Configuration
+
+The MySQL initialization uses Flyway for database schema versioning:
+
+```yaml
+mysql:
+  init:
+    flyway:
+      enabled: true
+      repository: "https://github.com/CDPForge/core-mysql.git"
+      version: "9.22.3"
+```
+
+Flyway automatically:
+- Clones the core-mysql repository
+- Downloads and installs Flyway CLI
+- Executes all migration scripts in version order
+- Creates application users with proper permissions
+- Validates migration integrity
 
 ## Usage
 
@@ -180,6 +202,36 @@ mysql -h cdp-forge-mysql-primary -u cdp_forge_user -pcdp-forge-user-2024 cdpforg
 # Connect to replicas
 mysql -h cdp-forge-mysql-secondary -u cdp_forge_user -pcdp-forge-user-2024 cdpforge
 ```
+
+### Database Migrations
+
+The MySQL database uses Flyway for schema versioning. To add new migrations:
+
+1. **Add migration scripts** to the [core-mysql repository](https://github.com/CDPForge/core-mysql.git):
+   ```sql
+   -- File: sql/V2__add_new_table.sql
+   CREATE TABLE new_table (
+     id INT PRIMARY KEY AUTO_INCREMENT,
+     name VARCHAR(100) NOT NULL,
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+   );
+   ```
+
+2. **Follow Flyway naming convention**:
+   ```
+   V<version>__<description>.sql
+   ```
+
+3. **Redeploy the chart** to apply migrations:
+   ```bash
+   helm upgrade cdp-forge . -f values.yaml
+   ```
+
+Flyway will automatically:
+- Detect new migration scripts
+- Execute them in version order
+- Track migration history in `flyway_schema_history` table
+- Prevent duplicate executions
 
 ### Creating a Kafka Topic
 
@@ -285,6 +337,9 @@ kubectl exec -it cdp-forge-mysql-primary-0 -- mysql -u root -p -e "SHOW SLAVE HO
 # Check master/replica status
 kubectl exec -it cdp-forge-mysql-primary-0 -- mysql -u root -p -e "SHOW MASTER STATUS;"
 kubectl exec -it cdp-forge-mysql-secondary-0 -- mysql -u root -p -e "SHOW SLAVE STATUS\G"
+
+# Check Flyway migration status
+kubectl exec -it cdp-forge-mysql-primary-0 -- mysql -u root -p cdpforge -e "SELECT * FROM flyway_schema_history ORDER BY installed_rank;"
 ```
 
 ### Logs
@@ -300,7 +355,9 @@ kubectl logs -l app.kubernetes.io/name=opensearch-dashboards
 
 # MySQL
 kubectl logs -l app.kubernetes.io/name=mysql
-```
+
+# Flyway migration logs
+kubectl logs -l app.kubernetes.io/component=mysql -c mysql-init
 
 ## Uninstallation
 

@@ -109,6 +109,14 @@ mysql:
     username: "cdp_forge_user"
     password: "cdp-forge-user-2024"
   
+  # Configurazione inizializzazione database con Flyway
+  init:
+    enabled: true
+    flyway:
+      enabled: true
+      repository: "https://github.com/CDPForge/core-mysql.git"
+      version: "9.22.3"
+  
   # Configurazione replicazione
   primary:
     enabled: true

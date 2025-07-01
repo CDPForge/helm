@@ -55,24 +55,6 @@ spec:
           {{- toYaml (index .Values "core-pipeline-manager").resources | nindent 10 }}
         {{- end }}
 
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
-
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 10
-          periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 3
-
         volumeMounts:
         - name: cluster-config
           mountPath: /app/dist/config/config.yml

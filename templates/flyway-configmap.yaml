@@ -1,0 +1,36 @@
+{{- if and .Values.mysql.enabled .Values.mysql.init.flyway.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cdp-forge.fullname" . }}-flyway-config
+  labels:
+    {{- include "cdp-forge.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mysql
+data:
+  flyway.conf: |-
+    # Flyway Configuration for CDP Forge MySQL Database
+    # This file contains Flyway configuration options
+    
+    # Database connection (will be overridden by command line)
+    flyway.url=jdbc:mysql://{{ .Release.Name }}-mysql:3306/{{ .Values.mysql.auth.database }}
+    flyway.user=root
+    flyway.password={{ .Values.mysql.auth.rootPassword }}
+    
+    # Migration settings
+    flyway.locations=filesystem:/tmp/core-mysql/sql
+    flyway.baselineOnMigrate=true
+    flyway.baselineVersion=0
+    flyway.validateOnMigrate=true
+    flyway.cleanDisabled=true
+    
+    # MySQL specific settings
+    flyway.encoding=UTF-8
+    flyway.placeholderReplacement=false
+    
+    # Logging
+    flyway.loggers=slf4j
+    flyway.outOfOrder=false
+    flyway.mixed=false
+    flyway.group=false
+    flyway.installedBy=cdp-forge-helm
+{{- end }} 
