@@ -47,8 +47,9 @@ spec:
 
         volumeMounts:
         - name: cluster-config
-          mountPath: /app/dist/config
+          mountPath: /app/config/config.yml
           readOnly: true
+          subPath: config.yml
 
       volumes:
       - name: cluster-config
