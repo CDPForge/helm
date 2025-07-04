@@ -19,6 +19,12 @@ show_usage() {
     echo ""
 }
 
+# Check if yq is installed
+if ! command -v yq &> /dev/null; then
+    echo "❌ Error: yq is not installed. Please install yq before running this script."
+    exit 1
+fi
+
 # Default values
 NAMESPACE="cdpforge"
 RELEASE_NAME="cdp-forge"
@@ -81,12 +87,15 @@ helm repo update
 
 # 2. Install Strimzi operator (if not already present)
 echo "🔧 Installing Strimzi operator..."
-if helm list -n $NAMESPACE | grep -q "strimzi-kafka-operator"; then
-    echo "✅ Strimzi operator already installed"
-else
-    echo "📥 Installing Strimzi operator..."
-    helm install strimzi-kafka-operator strimzi/strimzi-kafka-operator -n $NAMESPACE --create-namespace --wait --timeout 5m
-    echo "✅ Strimzi operator installed successfully"
+
+if [ "$(yq e '.kafka.enabled' "$VALUES_FILE")" = "true" ]; then
+    if helm list -n $NAMESPACE | grep -q "strimzi-kafka-operator"; then
+        echo "✅ Strimzi operator already installed"
+    else
+        echo "📥 Installing Strimzi operator..."
+        helm install strimzi-kafka-operator strimzi/strimzi-kafka-operator -n $NAMESPACE --create-namespace --wait --timeout 5m
+        echo "✅ Strimzi operator installed successfully"
+    fi
 fi
 
 # 3. Wait for Strimzi CRDs to be available

@@ -8,19 +8,19 @@ global:
   # namespaceOverride: "cdp-forge-prod"
 
 # Configurazione Strimzi Kafka Operator
-strimzi:
-  enabled: true
-  # Namespace dove Strimzi monitora i cluster
-  watchNamespaces: ["default"]  # Cambia con il tuo namespace
-  # Oppure per monitorare tutti i namespace:
-  # watchNamespaces: ["*"]
-  resources:
-    requests:
-      memory: "256Mi"
-      cpu: "100m"
-    limits:
-      memory: "512Mi"
-      cpu: "200m"
+#strimzi:
+#  enabled: true
+#  # Namespace dove Strimzi monitora i cluster
+#  watchNamespaces: ["default"]  # Cambia con il tuo namespace
+#  # Oppure per monitorare tutti i namespace:
+#  # watchNamespaces: ["*"]
+#  resources:
+#    requests:
+#      memory: "256Mi"
+#      cpu: "100m"
+#    limits:
+#      memory: "512Mi"
+#      cpu: "200m"
 
 # Configurazione Cluster Kafka
 kafka:
@@ -264,4 +264,24 @@ core-pipeline-stage:
   # Configurazione servizio
   service:
     type: ClusterIP
-    port: 80    
+    port: 80
+
+# Pipeline Output Stage
+plugin-pipeline-output:
+  enabled: true
+
+  image:
+    tag: "latest"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+  service:
+    type: ClusterIP
+    port: 80
