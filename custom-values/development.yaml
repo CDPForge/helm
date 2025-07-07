@@ -162,3 +162,13 @@ core-pipeline-manager:
     limits:
       memory: "512Mi"
       cpu: "500m"
+
+plugin-pipeline-geo:
+  geoDbtoken: ""
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"

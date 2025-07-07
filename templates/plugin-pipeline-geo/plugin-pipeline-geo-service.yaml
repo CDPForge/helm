@@ -1,19 +1,19 @@
-{{- if (index .Values "plugin-pipeline-output").enabled }}
+{{- if (index .Values "plugin-pipeline-geo").enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "cdp-forge.fullname" . }}-plugin-pipeline-output
+  name: {{ include "cdp-forge.fullname" . }}-plugin-pipeline-geo
   labels:
     {{- include "cdp-forge.labels" . | nindent 4 }}
-    app.kubernetes.io/component: plugin-pipeline-output
+    app.kubernetes.io/component: plugin-pipeline-geo
 spec:
-  type: {{ (index .Values "plugin-pipeline-output").service.type }}
+  type: {{ (index .Values "plugin-pipeline-geo").service.type }}
   ports:
-    - port: {{ (index .Values "plugin-pipeline-output").service.port }}
+    - port: {{ (index .Values "plugin-pipeline-geo").service.port }}
       targetPort: 3000
       protocol: TCP
       name: http
   selector:
     {{- include "cdp-forge.selectorLabels" . | nindent 4 }}
-    app.kubernetes.io/component: plugin-pipeline-output
+    app.kubernetes.io/component: plugin-pipeline-geo
 {{- end }}

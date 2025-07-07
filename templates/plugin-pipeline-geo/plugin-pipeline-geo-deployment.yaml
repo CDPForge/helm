@@ -1,22 +1,22 @@
-{{- if (index .Values "plugin-pipeline-output").enabled }}
+{{- if (index .Values "plugin-pipeline-geo").enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "cdp-forge.fullname" . }}-plugin-pipeline-output
+  name: {{ include "cdp-forge.fullname" . }}-plugin-pipeline-geo
   labels:
     {{- include "cdp-forge.labels" . | nindent 4 }}
-    app.kubernetes.io/component: plugin-pipeline-output
+    app.kubernetes.io/component: plugin-pipeline-geo
 spec:
   replicas: 1
   selector:
     matchLabels:
       {{- include "cdp-forge.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: plugin-pipeline-output
+      app.kubernetes.io/component: plugin-pipeline-geo
   template:
     metadata:
       labels:
         {{- include "cdp-forge.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: plugin-pipeline-output
+        app.kubernetes.io/component: plugin-pipeline-geo
     spec:
       securityContext:
         runAsNonRoot: true
@@ -31,18 +31,18 @@ spec:
         {{- end }}
 
       containers:
-      - name: plugin-pipeline-output
-        image: ghcr.io/cdpforge/plugin-pipeline-output:{{ (index .Values "plugin-pipeline-output").image.tag | default "latest" }}
-        imagePullPolicy: {{ (index .Values "plugin-pipeline-output").image.pullPolicy | default "IfNotPresent" }}
+      - name: plugin-pipeline-geo
+        image: ghcr.io/cdpforge/plugin-pipeline-geo:{{ (index .Values "plugin-pipeline-geo").image.tag | default "latest" }}
+        imagePullPolicy: {{ (index .Values "plugin-pipeline-geo").image.pullPolicy | default "IfNotPresent" }}
 
         ports:
         - name: http
           containerPort: 3000
           protocol: TCP
 
-        {{- if (index .Values "plugin-pipeline-output").resources }}
+        {{- if (index .Values "plugin-pipeline-geo").resources }}
         resources:
-          {{- toYaml (index .Values "plugin-pipeline-output").resources | nindent 10 }}
+          {{- toYaml (index .Values "plugin-pipeline-geo").resources | nindent 10 }}
         {{- end }}
 
         volumeMounts:

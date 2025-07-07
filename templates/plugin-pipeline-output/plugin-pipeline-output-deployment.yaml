@@ -32,7 +32,7 @@ spec:
 
       containers:
       - name: plugin-pipeline-output
-        image: ghcr.io/cdpforge/plugin-pipeline-output:{{ (index .Values "plugin-pipeline-output").image.tag | default "latest" }}
+        image: ghcr.io/cdpforge/core-pipeline-output:{{ (index .Values "plugin-pipeline-output").image.tag | default "latest" }}
         imagePullPolicy: {{ (index .Values "plugin-pipeline-output").image.pullPolicy | default "IfNotPresent" }}
 
         ports:

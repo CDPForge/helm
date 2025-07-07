@@ -87,8 +87,7 @@ helm repo update
 
 # 2. Install Strimzi operator (if not already present)
 echo "🔧 Installing Strimzi operator..."
-
-if [ "$(yq e '.kafka.enabled' "$VALUES_FILE")" = "true" ]; then
+if [ "$(yq '.kafka.enabled' "$VALUES_FILE")" != "false" ]; then
     if helm list -n $NAMESPACE | grep -q "strimzi-kafka-operator"; then
         echo "✅ Strimzi operator already installed"
     else
