@@ -1,0 +1,58 @@
+{{- if (index .Values "core-input").enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cdp-forge.fullname" . }}-core-input
+  labels:
+    {{- include "cdp-forge.labels" . | nindent 4 }}
+    app.kubernetes.io/component: core-input
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "cdp-forge.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: core-input
+  template:
+    metadata:
+      labels:
+        {{- include "cdp-forge.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: core-input
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      initContainers:
+        {{- if (index .Values "core-pipeline-manager").enabled }}
+        - name: wait-for-core-pipeline-manager
+          image: busybox:1.35
+          command: ['sh', '-c', 'until nc -z cdp-forge-core-pipeline-manager 80; do echo waiting for core-pipeline-manager; sleep 2; done;']
+        {{- end }}
+
+      containers:
+      - name: core-input
+        image: ghcr.io/cdpforge/core-input:{{ (index .Values "core-input").image.tag | default "latest" }}
+        imagePullPolicy: {{ (index .Values "core-input").image.pullPolicy | default "IfNotPresent" }}
+
+        ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP
+
+        {{- if (index .Values "core-input").resources }}
+        resources:
+          {{- toYaml (index .Values "core-input").resources | nindent 10 }}
+        {{- end }}
+
+        volumeMounts:
+        - name: cluster-config
+          mountPath: /app/config/config.yml
+          readOnly: true
+          subPath: config.yml
+
+      volumes:
+      - name: cluster-config
+        secret:
+          secretName: {{ include "cdp-forge.fullname" . }}-cluster-config
+{{- end }}

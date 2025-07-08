@@ -148,12 +148,7 @@ mysql:
     enabled: false
 
 # Configurazione Core Pipeline Manager
-core-pipeline-manager:  
-  # Configurazione immagine
-  image:
-    tag: "0.0.8"
-    pullPolicy: IfNotPresent
-  
+core-pipeline-manager:
   # Configurazione risorse
   resources:
     requests:

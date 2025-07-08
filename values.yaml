@@ -226,7 +226,7 @@ core-pipeline-manager:
   
   # Configurazione immagine
   image:
-    tag: "0.0.5"
+    tag: "0.0.6"
     pullPolicy: IfNotPresent
   
   # Configurazione risorse
@@ -249,7 +249,7 @@ core-pipeline-stage:
   
   # Configurazione immagine
   image:
-    tag: "0.0.9"
+    tag: "0.0.11"
     pullPolicy: IfNotPresent
   
   # Configurazione risorse
@@ -293,6 +293,25 @@ plugin-pipeline-geo:
 
   image:
     tag: "0.0.8"
+    pullPolicy: IfNotPresent
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+
+  service:
+    type: ClusterIP
+    port: 80
+
+core-input:
+  enabled: true
+
+  image:
+    tag: "0.0.6"
     pullPolicy: IfNotPresent
 
   resources:
