@@ -85,6 +85,7 @@ kubectl delete pvc -l app.kubernetes.io/name=mysql -n $NAMESPACE || true
 # Delete also any orphaned PVCs that might remain
 echo "🧹 Cleaning up orphaned PVCs..."
 kubectl get pvc -A | grep $NAMESPACE | awk '{print $2}' | xargs -I {} kubectl delete pvc {} -n $NAMESPACE || true
+rm certs/os-root-ca.pem
 
 echo "✅ Uninstallation completed successfully!"
 echo ""
