@@ -119,6 +119,15 @@ else
     helm install $RELEASE_NAME . -f "$VALUES_FILE" -n $NAMESPACE
 fi
 
+echo "Waiting for opensearch..."
+sleep 120;
+
+echo "Copying root-ca cert from opensearch"
+kubectl cp $NAMESPACE/$RELEASE_NAME-opensearch-master-0:/usr/share/opensearch/config/root-ca.pem ./certs/os-root-ca.pem
+kubectl create secret generic $RELEASE_NAME-opensearch-client-cert -n $NAMESPACE --from-file=./certs/os-root-ca.pem
+
+kubectl patch deployment $RELEASE_NAME-plugin-pipeline-output -n $NAMESPACE -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"restartedAt\":\"$(date +%s)\"}}}}}"
+
 echo "✅ Installation completed successfully!"
 echo ""
 echo "📊 To check status:"

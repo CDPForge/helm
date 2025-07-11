@@ -50,9 +50,15 @@ spec:
           mountPath: /app/config/config.yml
           readOnly: true
           subPath: config.yml
+        - name: opensearch-client-cert
+          mountPath: /app/certs/root-ca.pem
+          readOnly: true
 
       volumes:
       - name: cluster-config
         secret:
           secretName: {{ include "cdp-forge.fullname" . }}-cluster-config
+      - name: opensearch-client-cert
+        secret:
+          secretName: {{ .Release.Name }}-opensearch-client-cert
 {{- end }}

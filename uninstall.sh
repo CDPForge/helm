@@ -74,6 +74,9 @@ kubectl delete crd $(kubectl get crd | grep kafka | awk '{print $1}') || true
 echo "🗑️ Deleting Strimzi CRDs..."
 kubectl delete crd $(kubectl get crd | grep strimzi | awk '{print $1}') || true
 
+# Delete opensearch certs
+kubectl delete secret $RELEASE_NAME-opensearch-client-cert -n $NAMESPACE
+
 # Delete all PVCs in the namespace
 echo "🗑️ Deleting Kafka and MySQL PVCs in namespace $NAMESPACE..."
 kubectl delete pvc -l app.kubernetes.io/name=kafka -n $NAMESPACE || true
@@ -88,5 +91,3 @@ echo ""
 echo "📊 To verify everything has been removed:"
 echo "   kubectl get all -n $NAMESPACE"
 echo "   kubectl get pvc -n $NAMESPACE"
-
-

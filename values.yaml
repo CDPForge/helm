@@ -25,6 +25,7 @@ global:
 # Configurazione Cluster Kafka
 kafka:
   enabled: true
+  advertiseLocalhost: false
   name: cdp-forge-kafka
   replicas: 3
   version: 3.9.0
@@ -121,9 +122,9 @@ opensearch-dashboards:
   service:
     type: ClusterIP
     port: 5601
-  
+
   # Configurazione OpenSearch connection
-  opensearchHosts: "http://cdp-forge-opensearch-master:9200"
+  opensearchHosts: "https://opensearch-cluster-master:9200"
   
   # Configurazione sicurezza
   security:
@@ -271,7 +272,7 @@ plugin-pipeline-output:
   enabled: true
 
   image:
-    tag: "0.0.5"
+    tag: "0.0.6"
     pullPolicy: IfNotPresent
 
   resources:

@@ -18,7 +18,21 @@ spec:
         port: 9093
         type: internal
         tls: true
-    
+      {{- if .Values.kafka.advertiseLocalhost }}
+      - configuration: # TO CONNECT FROM LOCAL DEV ENV LIKE DOCKER DESKTOP
+          brokers:
+            - advertisedHost: localhost
+              broker: 0
+            - advertisedHost: localhost
+              broker: 1
+            - advertisedHost: localhost
+              broker: 2
+        name: external
+        port: 9094
+        tls: false
+        type: nodeport
+      {{- end }}
+
   entityOperator:
     topicOperator: {}
     userOperator: {} 
