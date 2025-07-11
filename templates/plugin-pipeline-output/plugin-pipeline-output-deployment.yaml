@@ -53,6 +53,7 @@ spec:
         - name: opensearch-client-cert
           mountPath: /app/certs/root-ca.pem
           readOnly: true
+          subPath: os-root-ca.pem
 
       volumes:
       - name: cluster-config
