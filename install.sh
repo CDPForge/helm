@@ -82,10 +82,41 @@ helm repo add bitnami https://charts.bitnami.com/bitnami || true
 # OpenSearch repository
 helm repo add opensearch https://opensearch-project.github.io/helm-charts/ || true
 
+# Jetstack repository (cert-manager)
+helm repo add jetstack https://charts.jetstack.io || true
+
 # Update all repositories
 helm repo update
 
-# 2. Install Strimzi operator (if not already present)
+# 2. Install cert-manager (if not already present)
+echo "🔧 Installing cert-manager..."
+if helm list -n cert-manager | grep -q "cert-manager"; then
+    echo "✅ cert-manager already installed"
+else
+    echo "📥 Installing cert-manager..."
+    helm install cert-manager jetstack/cert-manager \
+      --namespace cert-manager \
+      --create-namespace \
+      --version v1.13.3 \
+      --set installCRDs=true
+    
+    echo "⏳ Waiting for cert-manager CRDs to be available..."
+    kubectl wait --for=condition=ready pod -l app=cert-manager -n cert-manager --timeout=300s || {
+        echo "❌ Timeout waiting for cert-manager pods"
+        exit 1
+    }
+    kubectl wait --for=condition=ready pod -l app=cainjector -n cert-manager --timeout=300s || {
+        echo "❌ Timeout waiting for cainjector pods"
+        exit 1
+    }
+    kubectl wait --for=condition=ready pod -l app=webhook -n cert-manager --timeout=300s || {
+        echo "❌ Timeout waiting for webhook pods"
+        exit 1
+    }
+    echo "✅ cert-manager installed successfully"
+fi
+
+# 3. Install Strimzi operator (if not already present)
 echo "🔧 Installing Strimzi operator..."
 if [ "$(yq '.kafka.enabled' "$VALUES_FILE")" != "false" ]; then
     if helm list -n $NAMESPACE | grep -q "strimzi-kafka-operator"; then
@@ -97,7 +128,7 @@ if [ "$(yq '.kafka.enabled' "$VALUES_FILE")" != "false" ]; then
     fi
 fi
 
-# 3. Wait for Strimzi CRDs to be available
+# 4. Wait for Strimzi CRDs to be available
 echo "⏳ Waiting for Strimzi CRDs to be available..."
 kubectl wait --for=condition=established --timeout=120s crd/kafkas.kafka.strimzi.io || {
     echo "❌ Timeout waiting for Kafka CRDs"
@@ -109,7 +140,7 @@ kubectl wait --for=condition=established --timeout=120s crd/kafkanodepools.kafka
 }
 echo "✅ Strimzi CRDs available"
 
-# 4. Install main chart
+# 5. Install main chart
 echo "📦 Installing main CDP Forge chart..."
 if helm list -n $NAMESPACE | grep -q "$RELEASE_NAME"; then
     echo "🔄 Updating existing release..."
@@ -119,14 +150,14 @@ else
     helm install $RELEASE_NAME . -f "$VALUES_FILE" -n $NAMESPACE
 fi
 
-echo "Waiting for opensearch..."
-sleep 120;
+#echo "Waiting for opensearch..."
+#sleep 120;
 
-echo "Copying root-ca cert from opensearch"
-kubectl cp $NAMESPACE/$RELEASE_NAME-opensearch-master-0:/usr/share/opensearch/config/root-ca.pem ./certs/os-root-ca.pem
-kubectl create secret generic $RELEASE_NAME-opensearch-client-cert -n $NAMESPACE --from-file=./certs/os-root-ca.pem
+#echo "Copying root-ca cert from opensearch"
+#kubectl cp $NAMESPACE/$RELEASE_NAME-opensearch-master-0:/usr/share/opensearch/config/root-ca.pem ./certs/os-root-ca.pem
+#kubectl create secret generic $RELEASE_NAME-opensearch-client-cert -n $NAMESPACE --from-file=./certs/os-root-ca.pem
 
-kubectl patch deployment $RELEASE_NAME-plugin-pipeline-output -n $NAMESPACE -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"restartedAt\":\"$(date +%s)\"}}}}}"
+#kubectl patch deployment $RELEASE_NAME-plugin-pipeline-output -n $NAMESPACE -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"restartedAt\":\"$(date +%s)\"}}}}}"
 
 echo "✅ Installation completed successfully!"
 echo ""

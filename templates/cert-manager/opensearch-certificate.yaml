@@ -1,0 +1,22 @@
+{{- if and .Values.certmanager.enabled .Values.opensearch.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: opensearch-certs
+  namespace: {{ .Release.Namespace }}
+spec:
+  secretName: opensearch-certs
+  issuerRef:
+    name: {{ include "cdp-forge.fullname" . }}-ca-issuer
+    kind: ClusterIssuer
+  commonName: opensearch-cluster-master
+  dnsNames:
+    - opensearch-cluster-master
+    - opensearch-cluster-master.{{ .Release.Namespace }}.svc
+    - opensearch-cluster-master.{{ .Release.Namespace }}.svc.cluster.local
+    - localhost
+  ipAddresses:
+    - 127.0.0.1
+  duration: 8760h # 1 anno
+  renewBefore: 720h # rinnova 30 giorni prima
+{{- end }}

@@ -49,13 +49,13 @@ spec:
         {{- end }}
 
         volumeMounts:
-        - name: opensearch-client-cert
+        - name: opensearch-certs
           mountPath: /app/certs/root-ca.pem
           readOnly: true
-          subPath: os-root-ca.pem
+          subPath: ca.crt
 
       volumes:
-      - name: opensearch-client-cert
+      - name: opensearch-certs
         secret:
-          secretName: {{ .Release.Name }}-opensearch-client-cert
+          secretName: opensearch-certs
 {{- end }}

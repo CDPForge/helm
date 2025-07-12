@@ -4,23 +4,11 @@
 global:
   environment: production
   domain: cdp-forge.local
-  # Namespace per tutti i componenti (opzionale)
-  # namespaceOverride: "cdp-forge-prod"
 
-# Configurazione Strimzi Kafka Operator
-#strimzi:
-#  enabled: true
-#  # Namespace dove Strimzi monitora i cluster
-#  watchNamespaces: ["default"]  # Cambia con il tuo namespace
-#  # Oppure per monitorare tutti i namespace:
-#  # watchNamespaces: ["*"]
-#  resources:
-#    requests:
-#      memory: "256Mi"
-#      cpu: "100m"
-#    limits:
-#      memory: "512Mi"
-#      cpu: "200m"
+certmanager:
+  enabled: true
+  installCRDs: true
+  namespace: cert-manager
 
 # Configurazione Cluster Kafka
 kafka:
@@ -72,23 +60,28 @@ opensearch:
   persistence:
     enabled: true
     size: 20Gi
-  
-  # Configurazione sicurezza
-  security:
-    enabled: true
-    tls:
-      http:
-        enabled: true
-      transport:
-        enabled: true
-  
+
+  secretMounts:
+    - name: certs
+      secretName: opensearch-certs
+      path: /usr/share/opensearch/config/certs
+      defaultMode: 0600
+
+  config:
+    opensearch.yml: |
+      plugins.security.ssl.transport.pemcert_filepath: /usr/share/opensearch/config/certs/tls.crt
+      plugins.security.ssl.transport.pemkey_filepath: /usr/share/opensearch/config/certs/tls.key
+      plugins.security.ssl.transport.pemtrustedcas_filepath: /usr/share/opensearch/config/certs/ca.crt
+      plugins.security.ssl.transport.enforce_hostname_verification: false
+      plugins.security.ssl.http.enabled: true
+      plugins.security.ssl.http.pemcert_filepath: /usr/share/opensearch/config/certs/tls.crt
+      plugins.security.ssl.http.pemkey_filepath: /usr/share/opensearch/config/certs/tls.key
+      plugins.security.ssl.http.pemtrustedcas_filepath: /usr/share/opensearch/config/certs/ca.crt
+
   # Variabili d'ambiente aggiuntive per OpenSearch 3.1.0
   extraEnvs:
     - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
       value: "CdpForge@2024!"
-
-    - name: OPENSEARCH_SUBJECT_ALT_NAMES
-      value: "DNS:opensearch-cluster-master,DNS:opensearch-cluster-master.cdpforge.svc.cluster.local,DNS:opensearch-cluster-master.cdpforge.svc,DNS:localhost"
 
 # Configurazione OpenSearch Dashboards
 opensearch-dashboards:

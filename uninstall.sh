@@ -66,6 +66,15 @@ echo "🔧 Uninstalling Helm releases..."
 helm uninstall $RELEASE_NAME -n $NAMESPACE || true
 helm uninstall strimzi-kafka-operator -n $NAMESPACE || true
 
+# 1. Disinstallare il release Helm
+helm uninstall cert-manager -n cert-manager
+
+# 2. Eliminare il namespace (opzionale)
+kubectl delete namespace cert-manager
+
+# 3. Rimuovere le CRDs (Custom Resource Definitions)
+kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.crds.yaml || true
+
 # Delete ALL Kafka CRDs (warning: you will lose any custom data!)
 echo "🗑️ Deleting Kafka CRDs..."
 kubectl delete crd $(kubectl get crd | grep kafka | awk '{print $1}') || true

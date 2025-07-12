@@ -148,7 +148,7 @@ core-pipeline-manager:
       cpu: "500m"
 
 plugin-pipeline-geo:
-  geoDbtoken: ""
+  geoDbtoken: "UUK9XaaTqwGd3xWUo3oRAxCLjZauqAn58IhsU4QyfOFs3Xt22EvcvLh62o3ZsDnX"
   resources:
     requests:
       memory: "128Mi"
