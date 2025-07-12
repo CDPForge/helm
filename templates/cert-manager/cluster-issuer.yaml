@@ -13,6 +13,7 @@ metadata:
 spec:
   ca:
     secretName: {{ include "cdp-forge.fullname" . }}-ca-key-pair
+    secretNamespace: {{ .Release.Namespace }}
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
