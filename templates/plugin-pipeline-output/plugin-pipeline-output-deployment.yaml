@@ -34,6 +34,9 @@ spec:
       - name: plugin-pipeline-output
         image: ghcr.io/cdpforge/core-pipeline-output:{{ (index .Values "plugin-pipeline-output").image.tag | default "latest" }}
         imagePullPolicy: {{ (index .Values "plugin-pipeline-output").image.pullPolicy | default "IfNotPresent" }}
+        envFrom:
+          - secretRef:
+              name: {{ include "cdp-forge.fullname" . }}-cluster-config
 
         ports:
         - name: http
@@ -46,19 +49,12 @@ spec:
         {{- end }}
 
         volumeMounts:
-        - name: cluster-config
-          mountPath: /app/config/config.yml
-          readOnly: true
-          subPath: config.yml
         - name: opensearch-client-cert
           mountPath: /app/certs/root-ca.pem
           readOnly: true
           subPath: os-root-ca.pem
 
       volumes:
-      - name: cluster-config
-        secret:
-          secretName: {{ include "cdp-forge.fullname" . }}-cluster-config
       - name: opensearch-client-cert
         secret:
           secretName: {{ .Release.Name }}-opensearch-client-cert

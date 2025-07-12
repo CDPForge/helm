@@ -34,6 +34,9 @@ spec:
       - name: core-pipeline-stage
         image: ghcr.io/cdpforge/core-pipeline-stage:{{ (index .Values "core-pipeline-stage").image.tag | default "latest" }}
         imagePullPolicy: {{ (index .Values "core-pipeline-stage").image.pullPolicy | default "IfNotPresent" }}
+        envFrom:
+          - secretRef:
+              name: {{ include "cdp-forge.fullname" . }}-cluster-config
 
         ports:
         - name: http
@@ -44,15 +47,4 @@ spec:
         resources:
           {{- toYaml (index .Values "core-pipeline-stage").resources | nindent 10 }}
         {{- end }}
-
-        volumeMounts:
-        - name: cluster-config
-          mountPath: /app/config/config.yml
-          readOnly: true
-          subPath: config.yml
-
-      volumes:
-      - name: cluster-config
-        secret:
-          secretName: {{ include "cdp-forge.fullname" . }}-cluster-config
 {{- end }}

@@ -9,6 +9,11 @@ metadata:
 spec:
   kafka:
     version: {{ .Values.kafka.version | default "3.9.0" }}
+    config:
+      auto.create.topics.enable: "true"
+      num.partitions: "3"
+      default.replication.factor: "1"
+      log.retention.hours: 168
     listeners:
       - name: plain
         port: 9092

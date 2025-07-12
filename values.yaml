@@ -29,24 +29,6 @@ kafka:
   name: cdp-forge-kafka
   replicas: 3
   version: 3.9.0
-  image: strimzi/kafka:3.9.0-kafka-3.9.0
-  listeners:
-    - name: plain
-      port: 9092
-      type: internal
-      tls: false
-    - name: tls
-      port: 9093
-      type: internal
-      tls: true
-  config:
-    auto.create.topics.enable: "true"
-    offsets.topic.replication.factor: 3
-    transaction.state.log.replication.factor: 3
-    transaction.state.log.min.isr: 2
-    log.retention.hours: 168
-    log.segment.bytes: 1073741824
-    log.retention.check.interval.ms: 300000
   storage:
     type: persistent-claim
     size: 10Gi
@@ -104,6 +86,9 @@ opensearch:
   extraEnvs:
     - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
       value: "CdpForge@2024!"
+
+    - name: OPENSEARCH_SUBJECT_ALT_NAMES
+      value: "DNS:opensearch-cluster-master,DNS:opensearch-cluster-master.cdpforge.svc.cluster.local,DNS:opensearch-cluster-master.cdpforge.svc,DNS:localhost"
 
 # Configurazione OpenSearch Dashboards
 opensearch-dashboards:
@@ -227,7 +212,7 @@ core-pipeline-manager:
   
   # Configurazione immagine
   image:
-    tag: "0.0.6"
+    tag: "0.0.8"
     pullPolicy: IfNotPresent
   
   # Configurazione risorse
@@ -250,7 +235,7 @@ core-pipeline-stage:
   
   # Configurazione immagine
   image:
-    tag: "0.0.11"
+    tag: "0.0.15"
     pullPolicy: IfNotPresent
   
   # Configurazione risorse
@@ -272,7 +257,7 @@ plugin-pipeline-output:
   enabled: true
 
   image:
-    tag: "0.0.6"
+    tag: "0.0.9"
     pullPolicy: IfNotPresent
 
   resources:
@@ -293,7 +278,7 @@ plugin-pipeline-geo:
   geoDbtoken: ""
 
   image:
-    tag: "0.0.8"
+    tag: "0.0.11"
     pullPolicy: IfNotPresent
 
   resources:
@@ -312,7 +297,7 @@ core-input:
   enabled: true
 
   image:
-    tag: "0.0.6"
+    tag: "0.0.10"
     pullPolicy: IfNotPresent
 
   resources:
