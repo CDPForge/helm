@@ -8,7 +8,7 @@ spec:
   secretName: opensearch-certs
   issuerRef:
     name: {{ include "cdp-forge.fullname" . }}-ca-issuer
-    kind: ClusterIssuer
+    kind: Issuer
   commonName: opensearch-cluster-master
   dnsNames:
     - opensearch-cluster-master
