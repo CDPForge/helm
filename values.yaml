@@ -32,7 +32,7 @@ kafka:
 # Configurazione OpenSearch Helm Chart
 opensearch:
   enabled: true
-  
+  version: 3.1.0
   # Configurazione cluster
   clusterName: "cdp-forge-opensearch"
   
@@ -66,17 +66,37 @@ opensearch:
       secretName: opensearch-certs
       path: /usr/share/opensearch/config/certs
       defaultMode: 0600
+    - name: admin-cert
+      secretName: opensearch-admin-certs
+      path: /usr/share/opensearch/config/admin-certs
+      defaultMode: 0600
+
+  security:
+    enabled: true
+    tls:
+      http:
+        enabled: true
+      transport:
+        enabled: true
 
   config:
     opensearch.yml: |
-      plugins.security.ssl.transport.pemcert_filepath: /usr/share/opensearch/config/certs/tls.crt
-      plugins.security.ssl.transport.pemkey_filepath: /usr/share/opensearch/config/certs/tls.key
-      plugins.security.ssl.transport.pemtrustedcas_filepath: /usr/share/opensearch/config/certs/ca.crt
-      plugins.security.ssl.transport.enforce_hostname_verification: false
+      plugins.security.ssl.transport.enabled: true
+      plugins.security.ssl.transport.pemcert_filepath: certs/tls.crt
+      plugins.security.ssl.transport.pemkey_filepath: certs/tls.key
+      plugins.security.ssl.transport.pemtrustedcas_filepath: certs/ca.crt
+      plugins.security.ssl.transport.enforce_hostname_verification: true
       plugins.security.ssl.http.enabled: true
-      plugins.security.ssl.http.pemcert_filepath: /usr/share/opensearch/config/certs/tls.crt
-      plugins.security.ssl.http.pemkey_filepath: /usr/share/opensearch/config/certs/tls.key
-      plugins.security.ssl.http.pemtrustedcas_filepath: /usr/share/opensearch/config/certs/ca.crt
+      plugins.security.ssl.http.pemcert_filepath: certs/tls.crt
+      plugins.security.ssl.http.pemkey_filepath: certs/tls.key
+      plugins.security.ssl.http.pemtrustedcas_filepath: certs/ca.crt
+      plugins.security.authcz.admin_dn:
+        - "CN=admin"
+      plugins.security.nodes_dn:
+        - "CN=opensearch-cluster-master.{{ .Release.Namespace }}.svc.cluster.local"
+        - "CN=opensearch-cluster-master"
+        - "CN=opensearch-cluster-master.{{ .Release.Namespace }}"
+        - "CN=opensearch-cluster-master.{{ .Release.Namespace }}.svc"        
 
   # Variabili d'ambiente aggiuntive per OpenSearch 3.1.0
   extraEnvs:

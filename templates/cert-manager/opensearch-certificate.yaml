@@ -6,6 +6,10 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   secretName: opensearch-certs
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS8
+    size: 2048
   issuerRef:
     name: {{ include "cdp-forge.fullname" . }}-ca-issuer
     kind: Issuer

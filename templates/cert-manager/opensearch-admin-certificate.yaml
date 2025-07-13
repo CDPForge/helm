@@ -1,0 +1,19 @@
+{{- if and .Values.certmanager.enabled .Values.opensearch.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: opensearch-admin-certs
+  namespace: {{ .Release.Namespace }}
+spec:
+  secretName: opensearch-admin-certs
+  commonName: admin
+  usages:
+    - client auth
+  issuerRef:
+    name: {{ include "cdp-forge.fullname" . }}-ca-issuer
+    kind: Issuer
+  privateKey:
+    encoding: PKCS8
+    algorithm: RSA
+    size: 2048
+{{- end }}

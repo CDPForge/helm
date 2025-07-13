@@ -32,7 +32,7 @@ spec:
 
       containers:
       - name: plugin-pipeline-output
-        image: ghcr.io/cdpforge/core-pipeline-output:{{ (index .Values "plugin-pipeline-output").image.tag | default "latest" }}
+        image: "ghcr.io/cdpforge/core-pipeline-output:{{ (index .Values "plugin-pipeline-output").image.tag | default "latest" }}"
         imagePullPolicy: {{ (index .Values "plugin-pipeline-output").image.pullPolicy | default "IfNotPresent" }}
         envFrom:
           - secretRef:
@@ -57,5 +57,5 @@ spec:
       volumes:
       - name: opensearch-certs
         secret:
-          secretName: opensearch-certs
+          secretName: opensearch-admin-certs
 {{- end }}

@@ -96,6 +96,7 @@ echo "🧹 Cleaning up orphaned PVCs..."
 kubectl get pvc -A | grep $NAMESPACE | awk '{print $2}' | xargs -I {} kubectl delete pvc {} -n $NAMESPACE || true
 rm certs/os-root-ca.pem
 
+kubectl delete namespace $NAMESPACE
 echo "✅ Uninstallation completed successfully!"
 echo ""
 echo "📊 To verify everything has been removed:"

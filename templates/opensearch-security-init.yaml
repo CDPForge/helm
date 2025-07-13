@@ -1,0 +1,106 @@
+{{- if .Values.opensearch.enabled }}
+{{- $adminPassword := "" -}}
+{{- range .Values.opensearch.extraEnvs -}}
+{{- if eq .name "OPENSEARCH_INITIAL_ADMIN_PASSWORD" -}}
+{{- $adminPassword = .value -}}
+{{- end -}}
+{{- end -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: opensearch-securityadmin-postready
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: opensearch-cluster-master-securityadmin
+    spec:
+      restartPolicy: OnFailure
+
+      initContainers:
+        - name: wait-for-opensearch
+          image: busybox:1.35
+          command: ['sh', '-c', 'until nc -z opensearch-cluster-master 9200; do echo waiting for opensearch; sleep 2; done;']
+
+      containers:
+        - name: securityadmin
+          image: "opensearchproject/opensearch:{{ .Values.opensearch.version | default "3.1.0" }}"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Starting security admin configuration..."
+
+              {{- if $adminPassword }}
+              # Genera hash bcrypt per admin usando OpenSearch hash.sh
+              admin_hash=$(/usr/share/opensearch/plugins/opensearch-security/tools/hash.sh -p "$ADMIN_PASSWORD")
+              echo "Generated bcrypt hash for admin user using OpenSearch hash.sh"
+
+              # Backup del file originale
+              cp /usr/share/opensearch/config/opensearch-security/internal_users.yml /tmp/internal_users.yml.backup
+
+              # Aggiorna la password admin nel file internal_users.yml
+              sed -i '/^admin:/,/^[^ ]/ s|^\(\s*hash:\s*\).*|\1"'"$admin_hash"'"|' /usr/share/opensearch/config/opensearch-security/internal_users.yml
+
+              # Verifica che la modifica sia andata a buon fine
+              if grep -q "admin:" /usr/share/opensearch/config/opensearch-security/internal_users.yml; then
+                echo "Admin password hash updated successfully"
+              else
+                echo "Error updating admin password, restoring backup"
+                mv /tmp/internal_users.yml.backup /usr/share/opensearch/config/opensearch-security/internal_users.yml
+                exit 1
+              fi
+
+              # Esegui securityadmin.sh
+              echo "Running securityadmin.sh..."
+              /usr/share/opensearch/plugins/opensearch-security/tools/securityadmin.sh \
+                -cd /usr/share/opensearch/config/opensearch-security/ \
+                -icl -nhnv \
+                -cacert /usr/share/opensearch/config/certs/ca.crt \
+                -cert /usr/share/opensearch/config/admin-certs/tls.crt \
+                -key /usr/share/opensearch/config/admin-certs/tls.key \
+                -h opensearch-cluster-master.{{ .Release.Namespace }}.svc.cluster.local
+
+              echo "Security admin configuration completed successfully!"
+
+              {{- else }}
+              echo "ERROR: OPENSEARCH_INITIAL_ADMIN_PASSWORD not found in extraEnvs"
+              exit 1
+              {{- end }}
+
+          env:
+            - name: JAVA_HOME
+              value: /usr/share/opensearch/jdk
+            - name: OPENSEARCH_JAVA_OPTS
+              value: "-Xms512m -Xmx512m"
+            {{- if $adminPassword }}
+            - name: ADMIN_PASSWORD
+              value: "{{ $adminPassword }}"
+            {{- end }}
+
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+
+          volumeMounts:
+            - name: certs
+              mountPath: /usr/share/opensearch/config/certs
+              readOnly: true
+            - name: admin-certs
+              mountPath: /usr/share/opensearch/config/admin-certs
+              readOnly: true
+
+      volumes:
+        - name: certs
+          secret:
+            secretName: opensearch-certs
+        - name: admin-certs
+          secret:
+            secretName: opensearch-admin-certs
+{{- end }}
