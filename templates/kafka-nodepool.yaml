@@ -18,10 +18,10 @@ spec:
   resources:
     requests:
       memory: {{ .Values.kafka.resources.requests.memory | default "1Gi" }}
-      cpu: {{ .Values.kafka.resources.requests.cpu | default "500m" }}
+      cpu: {{ .Values.kafka.resources.requests.cpu | default "1" }}
     limits:
       memory: {{ .Values.kafka.resources.limits.memory | default "2Gi" }}
-      cpu: {{ .Values.kafka.resources.limits.cpu | default "1000m" }}
+      cpu: {{ .Values.kafka.resources.limits.cpu | default "2" }}
   jvmOptions:
     -Xms: {{ .Values.kafka.resources.requests.memory | default "1Gi" | replace "Gi" "g" | replace "Mi" "m" }}
     -Xmx: {{ .Values.kafka.resources.limits.memory | default "2Gi" | replace "Gi" "g" | replace "Mi" "m" }} 

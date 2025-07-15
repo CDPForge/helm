@@ -12,7 +12,8 @@ spec:
     config:
       auto.create.topics.enable: "true"
       num.partitions: "3"
-      default.replication.factor: "1"
+      default.replication.factor: "3"
+      min.insync.replicas: "2"
       log.retention.hours: 168
     listeners:
       - name: plain

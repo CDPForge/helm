@@ -11,11 +11,11 @@ kafka:
     size: 1Gi
   resources:
     requests:
-      memory: "512Mi"
-      cpu: "100m"
-    limits:
-      memory: "1Gi"
+      memory: "2Gi"
       cpu: "1000m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
 
 # Configurazione OpenSearch Helm Chart
 opensearch:
