@@ -148,9 +148,9 @@ pulsar:
     admin:
       existingSecret: ""
       ui_username: "pulsar"
-      ui_password: ""  # leave empty for random password
+      ui_password: "cdpforge"  # leave empty for random password
       db_username: "pulsar"
-      db_password: ""  # leave empty for random password
+      db_password: "cdpforge"  # leave empty for random password
 
 # Configurazione OpenSearch Helm Chart
 opensearch:
@@ -349,7 +349,7 @@ core-pipeline-manager:
   
   # Configurazione immagine
   image:
-    tag: "0.0.8"
+    tag: "0.1.2"
     pullPolicy: IfNotPresent
   
   # Configurazione risorse
@@ -372,7 +372,7 @@ core-pipeline-stage:
   
   # Configurazione immagine
   image:
-    tag: "0.0.15"
+    tag: "0.1.2"
     pullPolicy: IfNotPresent
   
   # Configurazione risorse
@@ -394,7 +394,7 @@ plugin-pipeline-output:
   enabled: true
 
   image:
-    tag: "0.0.9"
+    tag: "0.1.3"
     pullPolicy: IfNotPresent
 
   resources:
@@ -415,7 +415,7 @@ plugin-pipeline-geo:
   geoDbtoken: ""
 
   image:
-    tag: "0.0.11"
+    tag: "0.1.2"
     pullPolicy: IfNotPresent
 
   resources:
@@ -434,7 +434,7 @@ core-input:
   enabled: true
 
   image:
-    tag: "0.0.10"
+    tag: "0.1.2"
     pullPolicy: IfNotPresent
 
   resources:

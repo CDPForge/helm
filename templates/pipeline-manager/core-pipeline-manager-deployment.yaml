@@ -37,7 +37,7 @@ spec:
         {{- if .Values.opensearch.enabled }}
         - name: wait-for-opensearch
           image: busybox:1.35
-          command: ['sh', '-c', 'until nc -z opensearch-cluster-master 9200; do echo waiting for opensearch; sleep 2; done;']
+          command: ['sh', '-c', 'until nc -z {{ .Release.Name }}-opensearch-cluster-master 9200; do echo waiting for opensearch; sleep 2; done;']
         {{- end }}
 
       containers:
