@@ -73,8 +73,8 @@ echo ""
 # 1. Add required repositories
 echo "📦 Adding required Helm repositories..."
 
-# Strimzi repository (Kafka)
-helm repo add strimzi https://strimzi.io/charts/ || true
+# Pulsar repository (Pulsar)
+helm repo add apache https://pulsar.apache.org/charts || true
 
 # Bitnami repository (MySQL)
 helm repo add bitnami https://charts.bitnami.com/bitnami || true
@@ -87,6 +87,11 @@ helm repo add jetstack https://charts.jetstack.io || true
 
 # Update all repositories
 helm repo update
+
+# Build deps
+helm dependency build
+
+kubectl create namespace $NAMESPACE || true
 
 # 2. Install cert-manager (if not already present)
 echo "🔧 Installing cert-manager..."
@@ -116,30 +121,6 @@ else
     echo "✅ cert-manager installed successfully"
 fi
 
-# 3. Install Strimzi operator (if not already present)
-echo "🔧 Installing Strimzi operator..."
-if [ "$(yq '.kafka.enabled' "$VALUES_FILE")" != "false" ]; then
-    if helm list -n $NAMESPACE | grep -q "strimzi-kafka-operator"; then
-        echo "✅ Strimzi operator already installed"
-    else
-        echo "📥 Installing Strimzi operator..."
-        helm install strimzi-kafka-operator strimzi/strimzi-kafka-operator -n $NAMESPACE --create-namespace --wait --timeout 5m
-        echo "✅ Strimzi operator installed successfully"
-    fi
-fi
-
-# 4. Wait for Strimzi CRDs to be available
-echo "⏳ Waiting for Strimzi CRDs to be available..."
-kubectl wait --for=condition=established --timeout=120s crd/kafkas.kafka.strimzi.io || {
-    echo "❌ Timeout waiting for Kafka CRDs"
-    exit 1
-}
-kubectl wait --for=condition=established --timeout=120s crd/kafkanodepools.kafka.strimzi.io || {
-    echo "❌ Timeout waiting for KafkaNodePool CRDs"
-    exit 1
-}
-echo "✅ Strimzi CRDs available"
-
 # 5. Install main chart
 echo "📦 Installing main CDP Forge chart..."
 if helm list -n $NAMESPACE | grep -q "$RELEASE_NAME"; then
@@ -150,14 +131,6 @@ else
     helm install $RELEASE_NAME . -f "$VALUES_FILE" -n $NAMESPACE
 fi
 
-#echo "Waiting for opensearch..."
-#sleep 120;
-
-#echo "Copying root-ca cert from opensearch"
-#kubectl cp $NAMESPACE/$RELEASE_NAME-opensearch-master-0:/usr/share/opensearch/config/root-ca.pem ./certs/os-root-ca.pem
-#kubectl create secret generic $RELEASE_NAME-opensearch-client-cert -n $NAMESPACE --from-file=./certs/os-root-ca.pem
-
-#kubectl patch deployment $RELEASE_NAME-plugin-pipeline-output -n $NAMESPACE -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"restartedAt\":\"$(date +%s)\"}}}}}"
 
 echo "✅ Installation completed successfully!"
 echo ""

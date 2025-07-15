@@ -1,5 +1,4 @@
 # CDP Forge Helm Chart Values
-# Configurazione per Kafka con Strimzi e OpenSearch
 
 global:
   environment: production
@@ -10,24 +9,148 @@ certmanager:
   installCRDs: true
   namespace: cert-manager
 
-# Configurazione Cluster Kafka
-kafka:
+pulsar:
   enabled: true
-  advertiseLocalhost: false
-  name: cdp-forge-kafka
-  replicas: 3
-  version: 3.9.0
-  storage:
-    type: persistent-claim
-    size: 10Gi
-    deleteClaim: false
-  resources:
-    requests:
-      memory: "1Gi"
-      cpu: "500m"
-    limits:
-      memory: "2Gi"
-      cpu: "1000m"
+  volumes:
+    persistence: true
+    local_storage: false
+
+  affinity:
+    anti_affinity: true
+
+  components:
+    pulsar_manager: true
+
+  zookeeper:
+    replicaCount: 3
+    affinity:
+      anti_affinity: true
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 0.1
+    volumes:
+      useSeparateDiskForTxlog: false
+      # use a persistent volume or emptyDir
+      persistence: true
+      data:
+        name: data
+        size: 20Gi
+        local_storage: true
+        selector: {}
+
+  bookkeeper:
+    # use a component name that matches your grafana configuration
+    # so the metrics are correctly rendered in grafana dashboard
+    replicaCount: 4
+    affinity:
+      anti_affinity: true
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 0.2
+    volumes:
+      # use a persistent volume or emptyDir
+      persistence: true
+      journal:
+        name: journal
+        size: 10Gi
+        local_storage: true
+          # storageClassName: existent-storage-class
+      ledgers:
+        name: ledgers
+        size: 50Gi
+        local_storage: true
+          # storageClassName:
+
+  autorecovery:
+    affinity:
+      anti_affinity: true
+    resources:
+      requests:
+        memory: 64Mi
+        cpu: 0.05
+
+  victoria-metrics-k8s-stack:
+    grafana:
+      enabled: false
+
+  pulsar_metadata:
+    # resources for bin/pulsar initialize-cluster-metadata
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 1
+
+  broker:
+    replicaCount: 3
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      metrics: ~
+      behavior: ~
+    affinity:
+      anti_affinity: true
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 0.2
+
+  proxy:
+    replicaCount: 3
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      metrics: ~
+      behavior: ~
+    affinity:
+      anti_affinity: true
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 0.2
+    service:
+      type: ClusterIP
+
+  toolset:
+    replicaCount: 1
+    resources:
+      requests:
+        memory: 256Mi
+        cpu: 0.1
+
+
+  pulsar_manager:
+    resources:
+      requests:
+        memory: 250Mi
+        cpu: 0.1
+    volumes:
+      # use a persistent volume or emptyDir
+      persistence: true
+      data:
+        name: data
+        size: 128Mi
+        local_storage: true
+          # storageClassName: existent-storage-class,
+    service:
+      type: ClusterIP
+      port: 9527
+      targetPort: 9527
+      annotations: {}
+    adminService:
+      type: ClusterIP
+      port: 7750
+      targetPort: 7750
+      annotations: {}
+    admin:
+      existingSecret: ""
+      ui_username: "pulsar"
+      ui_password: ""  # leave empty for random password
+      db_username: "pulsar"
+      db_password: ""  # leave empty for random password
 
 # Configurazione OpenSearch Helm Chart
 opensearch:
@@ -35,6 +158,7 @@ opensearch:
   version: 3.1.0
   # Configurazione cluster
   clusterName: "cdp-forge-opensearch"
+  masterService: "cdp-forge-opensearch-cluster-master"
   
   # Configurazione nodo singolo con tutti i ruoli
   nodeGroup: "master"

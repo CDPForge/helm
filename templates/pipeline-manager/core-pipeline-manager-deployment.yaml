@@ -27,12 +27,12 @@ spec:
         {{- if .Values.mysql.enabled }}
         - name: wait-for-mysql
           image: busybox:1.35
-          command: ['sh', '-c', 'until nc -z cdp-forge-mysql 3306; do echo waiting for mysql; sleep 2; done;']
+          command: ['sh', '-c', 'until nc -z {{ .Release.Name }}-mysql 3306; do echo waiting for mysql; sleep 2; done;']
         {{- end }}
-        {{- if .Values.kafka.enabled }}
-        - name: wait-for-kafka
+        {{- if .Values.pulsar.enabled }}
+        - name: wait-for-pulsar
           image: busybox:1.35
-          command: ['sh', '-c', 'until nc -z cdp-forge-kafka-kafka-bootstrap 9092; do echo waiting for kafka; sleep 2; done;']
+          command: ['sh', '-c', 'until nc -z {{ .Release.Name }}-pulsar-proxy 6650; do echo waiting for pulsar; sleep 2; done;']
         {{- end }}
         {{- if .Values.opensearch.enabled }}
         - name: wait-for-opensearch
@@ -42,7 +42,7 @@ spec:
 
       containers:
       - name: core-pipeline-manager
-        image: ghcr.io/cdpforge/core-pipeline-manager:{{ (index .Values "core-pipeline-manager").image.tag | default "latest" }}
+        image: "ghcr.io/cdpforge/core-pipeline-manager:{{ (index .Values "core-pipeline-manager").image.tag | default "latest" }}"
         imagePullPolicy: {{ (index .Values "core-pipeline-manager").image.pullPolicy | default "IfNotPresent" }}
         envFrom:
           - secretRef:

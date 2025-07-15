@@ -1,11 +1,10 @@
 # CDP Forge Helm Chart
 
-This Helm package deploys a complete Kafka cluster, OpenSearch cluster, and MySQL master-replica cluster for CDP Forge using Strimzi Kafka Operator, official OpenSearch Helm Chart, and MySQL Bitnami Chart.
+This Helm package deploys a complete Pulsar cluster, OpenSearch cluster, and MySQL master-replica cluster for CDP Forge using Strimzi Kafka Operator, official OpenSearch Helm Chart, and MySQL Bitnami Chart.
 
 ## Components
 
-- **Strimzi Kafka Operator**: Operator for managing Kafka clusters on Kubernetes
-- **Kafka Cluster**: Kafka cluster with 3 replicas (High Availability)
+- **Pulsar Cluster**: Pulsar cluster with High Availability
 - **OpenSearch Cluster**: OpenSearch cluster with 3 nodes (all roles: master, data, ingest)
 - **OpenSearch Dashboards**: Web interface for managing OpenSearch
 - **MySQL Cluster**: MySQL master-replica cluster with automatic failover
@@ -53,11 +52,6 @@ helm install cdp-forge . -n cdpforge -f values.yaml
 ### Main Parameters
 
 | Parameter | Description | Default |
-|-----------|-------------|---------|
-| `strimzi.enabled` | Enable Strimzi Kafka Operator | `true` |
-| `kafka.enabled` | Enable Kafka cluster | `true` |
-| `kafka.replicas` | Number of Kafka replicas | `3` |
-| `kafka.storage.size` | Storage size for Kafka | `10Gi` |
 | `opensearch.enabled` | Enable OpenSearch cluster | `true` |
 | `opensearch.replicas` | Number of OpenSearch replicas | `3` |
 | `opensearch.persistence.size` | Storage size for OpenSearch | `20Gi` |
@@ -65,19 +59,6 @@ helm install cdp-forge . -n cdpforge -f values.yaml
 | `mysql.enabled` | Enable MySQL cluster | `true` |
 | `mysql.secondary.replicaCount` | Number of MySQL replicas | `2` |
 | `mysql.persistence.size` | Storage size for MySQL | `10Gi` |
-
-### Kafka Listeners
-
-The Kafka cluster exposes two listeners:
-- **plain**: Port 9092, no TLS, internal access
-- **tls**: Port 9093, with TLS, internal access
-
-### High Availability
-
-The Kafka cluster is configured for High Availability:
-- **3 Kafka replicas**: Protection from single broker failures
-- **Replication factor**: 3 for all system topics
-- **Min ISR**: 2 to ensure availability
 
 ### OpenSearch Security
 

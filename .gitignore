@@ -10,3 +10,4 @@
 .env.test
 .env.production
 Chart.lock
+charts/*

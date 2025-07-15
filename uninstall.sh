@@ -64,7 +64,6 @@ fi
 # Uninstall all involved releases
 echo "🔧 Uninstalling Helm releases..."
 helm uninstall $RELEASE_NAME -n $NAMESPACE || true
-helm uninstall strimzi-kafka-operator -n $NAMESPACE || true
 
 # 1. Disinstallare il release Helm
 helm uninstall cert-manager -n cert-manager
@@ -75,10 +74,6 @@ kubectl delete namespace cert-manager
 # 3. Rimuovere le CRDs (Custom Resource Definitions)
 kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.3/cert-manager.crds.yaml || true
 
-# Delete ALL Kafka CRDs (warning: you will lose any custom data!)
-echo "🗑️ Deleting Kafka CRDs..."
-kubectl delete crd $(kubectl get crd | grep kafka | awk '{print $1}') || true
-
 # Delete ALL Strimzi CRDs (warning: you will lose any custom data!)
 echo "🗑️ Deleting Strimzi CRDs..."
 kubectl delete crd $(kubectl get crd | grep strimzi | awk '{print $1}') || true
@@ -87,8 +82,8 @@ kubectl delete crd $(kubectl get crd | grep strimzi | awk '{print $1}') || true
 kubectl delete secret $RELEASE_NAME-opensearch-client-cert -n $NAMESPACE
 
 # Delete all PVCs in the namespace
-echo "🗑️ Deleting Kafka and MySQL PVCs in namespace $NAMESPACE..."
-kubectl delete pvc -l app.kubernetes.io/name=kafka -n $NAMESPACE || true
+echo "🗑️ Deleting Pulsar and MySQL PVCs in namespace $NAMESPACE..."
+kubectl delete pvc -l app.kubernetes.io/name=pulsar -n $NAMESPACE || true
 kubectl delete pvc -l app.kubernetes.io/name=mysql -n $NAMESPACE || true
 
 # Delete also any orphaned PVCs that might remain

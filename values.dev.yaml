@@ -2,20 +2,58 @@ global:
   environment: development
   domain: cdp-forge-dev.local
 
-# Configurazione Cluster Kafka
-kafka:
-  advertiseLocalhost: true
-  replicas: 3
+# Configurazione Cluster Pulsar
+pulsar:
+  affinity:
+    anti_affinity: false
 
-  storage:
-    size: 1Gi
-  resources:
-    requests:
-      memory: "2Gi"
-      cpu: "1000m"
-    limits:
-      memory: "4Gi"
-      cpu: "2000m"
+  zookeeper:
+    affinity:
+      anti_affinity: false
+    volumes:
+      data:
+        size: 5Gi
+
+  bookkeeper:
+    replicaCount: 3
+    affinity:
+      anti_affinity: false
+    volumes:
+      # use a persistent volume or emptyDir
+      persistence: true
+      journal:
+        name: journal
+        size: 5Gi
+        local_storage:
+          storageClassName: local-path
+      ledgers:
+        size: 10Gi
+        local_storage:
+          storageClassName: local-path
+  autorecovery:
+    affinity:
+      anti_affinity: false
+
+  broker:
+    affinity:
+      anti_affinity: false
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 0.2
+
+  proxy:
+    replicaCount: 1
+    affinity:
+      anti_affinity: false
+
+  pulsar_manager:
+    admin:
+      existingSecret: ""
+      ui_username: "pulsar"
+      ui_password: "cdpforge"  # leave empty for random password
+      db_username: "pulsar"
+      db_password: "cdpforge"  # leave empty for random password
 
 # Configurazione OpenSearch Helm Chart
 opensearch:

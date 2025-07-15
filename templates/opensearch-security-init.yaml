@@ -21,7 +21,7 @@ spec:
       initContainers:
         - name: wait-for-opensearch
           image: busybox:1.35
-          command: ['sh', '-c', 'until nc -z opensearch-cluster-master 9200; do echo waiting for opensearch; sleep 2; done;']
+          command: ['sh', '-c', 'until nc -z {{ .Release.Name }}-opensearch-cluster-master 9200; do echo waiting for opensearch; sleep 2; done;']
 
       containers:
         - name: securityadmin
@@ -61,7 +61,7 @@ spec:
                 -cacert /usr/share/opensearch/config/certs/ca.crt \
                 -cert /usr/share/opensearch/config/admin-certs/tls.crt \
                 -key /usr/share/opensearch/config/admin-certs/tls.key \
-                -h opensearch-cluster-master.{{ .Release.Namespace }}.svc.cluster.local
+                -h {{ .Release.Name }}-opensearch-cluster-master.{{ .Release.Namespace }}.svc.cluster.local
 
               echo "Security admin configuration completed successfully!"
 
