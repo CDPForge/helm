@@ -32,7 +32,7 @@ spec:
 
       containers:
       - name: core-pipeline-stage
-        image: ghcr.io/cdpforge/core-pipeline-stage:{{ (index .Values "core-pipeline-stage").image.tag | default "latest" }}
+        image: "ghcr.io/cdpforge/core-pipeline-stage:{{ (index .Values "core-pipeline-stage").image.tag | default "latest" }}"
         imagePullPolicy: {{ (index .Values "core-pipeline-stage").image.pullPolicy | default "IfNotPresent" }}
         envFrom:
           - secretRef:

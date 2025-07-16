@@ -110,9 +110,6 @@ opensearch-dashboards:
     type: ClusterIP
     port: 5601
   
-  # Configurazione OpenSearch connection
-  opensearchHosts: "https://opensearch-cluster-master:9200"
-  
   # Configurazione sicurezza
   security:
     adminPassword: "CdpForge@2024!"

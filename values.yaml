@@ -246,7 +246,7 @@ opensearch-dashboards:
     port: 5601
 
   # Configurazione OpenSearch connection
-  opensearchHosts: "https://opensearch-cluster-master:9200"
+  opensearchHosts: "https://cdp-forge-opensearch-cluster-master:9200"
   
   # Configurazione sicurezza
   security:

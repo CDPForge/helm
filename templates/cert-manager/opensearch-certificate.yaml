@@ -13,11 +13,11 @@ spec:
   issuerRef:
     name: {{ include "cdp-forge.fullname" . }}-ca-issuer
     kind: Issuer
-  commonName: opensearch-cluster-master
+  commonName: cdp-forge-opensearch-cluster-master
   dnsNames:
-    - opensearch-cluster-master
-    - opensearch-cluster-master.{{ .Release.Namespace }}.svc
-    - opensearch-cluster-master.{{ .Release.Namespace }}.svc.cluster.local
+    - cdp-forge-opensearch-cluster-master
+    - cdp-forge-opensearch-cluster-master.{{ .Release.Namespace }}.svc
+    - cdp-forge-opensearch-cluster-master.{{ .Release.Namespace }}.svc.cluster.local
     - localhost
   ipAddresses:
     - 127.0.0.1
