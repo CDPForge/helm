@@ -261,11 +261,11 @@ mysql:
   
   # Configurazione autenticazione
   auth:
-    rootPassword: "cdp-forge-root-2024"
+    rootPassword: "cdpforge"
     database: "cdpforge"
     username: "cdp_forge_user"
-    password: "cdp-forge-user-2024"
-    replicationPassword: "CdpForge@2024!"
+    password: "cdpforge"
+    replicationPassword: "cdpforge"
   
   # Configurazione inizializzazione database con Flyway
   init:
