@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: core-input-ingress
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls.certresolver: le
+spec:
+  rules:
+    - host: input.hsc.cdpforge.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "cdp-forge.fullname" . }}-core-input
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - osdash.hsc.cdpforge.com

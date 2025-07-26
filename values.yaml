@@ -179,6 +179,11 @@ opensearch:
     limits:
       memory: "4Gi"
       cpu: "1000m"
+
+  plugins:
+    enabled: true
+    installList:
+      - transport-reactor-netty4
   
   # Configurazione persistenza
   persistence:
@@ -448,3 +453,6 @@ core-input:
   service:
     type: ClusterIP
     port: 80
+
+phpmyadmin:
+  enabled: true
