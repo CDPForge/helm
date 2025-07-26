@@ -1,0 +1,31 @@
+{{- if .Values.opensearch.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-os-mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-os-mcp-server
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-os-mcp-server
+    spec:
+      initContainers:
+        - name: wait-for-opensearch
+          image: busybox:1.35
+          command: [ 'sh', '-c', 'until nc -z {{ .Release.Name }}-opensearch-cluster-master 9200; do echo waiting for opensearch; sleep 2; done;' ]
+      containers:
+        - name: mcp-server
+          image: ghcr.io/cdpforge/core-os-mcp:0.0.1
+          ports:
+            - containerPort: 9900
+          envFrom:
+            - secretRef:
+                name: {{ include "cdp-forge.fullname" . }}-cluster-config
+          env:
+            - name: OPENSEARCH_SSL_VERIFY
+              value: 'false'
+{{ end }}

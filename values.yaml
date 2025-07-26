@@ -210,6 +210,8 @@ opensearch:
 
   config:
     opensearch.yml: |
+      plugins.ml_commons.remote_inference.enabled: true
+      plugins.ml_commons.mcp_connector_enabled: true
       plugins.security.ssl.transport.enabled: true
       plugins.security.ssl.transport.pemcert_filepath: certs/tls.crt
       plugins.security.ssl.transport.pemkey_filepath: certs/tls.key

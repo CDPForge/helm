@@ -17,7 +17,7 @@ spec:
               service:
                 name: {{ .Release.Name }}-pma-service
                 port:
-                  number: 5601
+                  number: 80
   tls:
     - hosts:
         - pma.hsc.cdpforge.com

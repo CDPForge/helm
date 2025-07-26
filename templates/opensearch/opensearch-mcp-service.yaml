@@ -1,0 +1,14 @@
+{{- if .Values.opensearch.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-os-mcp-server-service
+spec:
+  selector:
+    app: {{ .Release.Name }}-os-mcp-server
+  ports:
+    - protocol: TCP
+      port: 9900
+      targetPort: 9900
+  type: ClusterIP
+{{ end }}
