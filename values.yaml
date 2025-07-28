@@ -356,7 +356,7 @@ core-pipeline-manager:
   
   # Configurazione immagine
   image:
-    tag: "0.1.4"
+    tag: "0.1.5"
     pullPolicy: IfNotPresent
   
   # Configurazione risorse
