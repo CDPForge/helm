@@ -6,10 +6,7 @@ version: 0.1.0
 appVersion: "1.0.0"
 keywords:
   - cdp
-  - forge
-  - pulsar
-  - opensearch
-  - mysql
+  - cdpforge
 home: https://github.com/your-org/cdp-forge
 sources:
   - https://github.com/your-org/cdp-forge
@@ -18,6 +15,10 @@ maintainers:
     email: cdp-team@example.com
 
 dependencies:
+  - name: redis
+    version: 21.2.13
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
   - name: mysql
     version: 9.14.2
     repository: https://charts.bitnami.com/bitnami

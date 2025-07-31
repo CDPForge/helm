@@ -350,6 +350,11 @@ mysql:
     port: 3306
     targetPort: 3306
 
+redis:
+  enabled: true
+  architecture: standalone
+  password: "cdpforge"
+
 # Configurazione Core Pipeline Manager
 core-pipeline-manager:
   enabled: true
