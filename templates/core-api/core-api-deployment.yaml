@@ -1,0 +1,61 @@
+{{- if (index .Values "core-api").enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cdp-forge.fullname" . }}-core-api
+  labels:
+    {{- include "cdp-forge.labels" . | nindent 4 }}
+    app.kubernetes.io/component: core-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "cdp-forge.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: core-api
+  template:
+    metadata:
+      labels:
+        {{- include "cdp-forge.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: core-api
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        
+      initContainers:
+        {{- if (index .Values "core-pipeline-manager").enabled }}
+        - name: wait-for-core-pipeline-manager
+          image: busybox:1.35
+          command: [ 'sh', '-c', 'until nc -z cdp-forge-core-pipeline-manager 80; do echo waiting for core-pipeline-manager; sleep 2; done;' ]
+        {{- end }}
+
+      containers:
+      - name: core-api
+        image: 'ghcr.io/cdpforge/core-api:'{{ (index .Values "core-api").image.tag | default "latest" }}
+        imagePullPolicy: {{ (index .Values "core-api").image.pullPolicy | default "IfNotPresent" }}
+        envFrom:
+          - secretRef:
+              name: {{ include "cdp-forge.fullname" . }}-cluster-config
+
+        ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP
+
+        {{- if (index .Values "core-api").resources }}
+        resources:
+          {{- toYaml (index .Values "core-api").resources | nindent 10 }}
+        {{- end }}
+
+        volumeMounts:
+        - name: opensearch-certs
+          mountPath: /app/certs/root-ca.pem
+          readOnly: true
+          subPath: ca.crt
+
+      volumes:
+        - name: opensearch-certs
+          secret:
+            secretName: opensearch-admin-certs
+{{- end }}

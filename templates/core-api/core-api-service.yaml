@@ -1,0 +1,19 @@
+{{- if (index .Values "core-api").enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cdp-forge.fullname" . }}-core-api
+  labels:
+    {{- include "cdp-forge.labels" . | nindent 4 }}
+    app.kubernetes.io/component: core-api
+spec:
+  type: {{ (index .Values "core-api").service.type }}
+  ports:
+    - port: {{ (index .Values "core-api").service.port }}
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "cdp-forge.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: core-api
+{{- end }}
